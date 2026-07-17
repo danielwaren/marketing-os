@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   INSTAGRAM_APP_ID,
@@ -40,6 +40,7 @@ export function useInstagramConnection(
   const [connecting, setConnecting] = useState(false);
   const [error, setError] =
     useState<InstagramConnectionError | null>(null);
+  const consumedCodeRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!workspaceId) {
@@ -53,6 +54,18 @@ export function useInstagramConnection(
     const code = params.get("code");
 
     if (code) {
+      if (consumedCodeRef.current === code) {
+        return;
+      }
+
+      consumedCodeRef.current = code;
+
+      window.history.replaceState(
+        {},
+        "",
+        window.location.pathname
+      );
+
       handleOAuthCallback(code);
       return;
     }
@@ -88,12 +101,6 @@ export function useInstagramConnection(
       workspaceId,
       code,
       getRedirectUri()
-    );
-
-    window.history.replaceState(
-      {},
-      "",
-      window.location.pathname
     );
 
     if (result.data) {
