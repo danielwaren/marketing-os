@@ -1,0 +1,16 @@
+---
+interface Props {
+  title?: string;
+}
+
+const { title = "Marketing OS" } = Astro.props;
+
+import AppLayout from "./AppLayout.astro";
+import { AppShell } from "@/app/layouts/AppShell";
+---
+
+<AppLayout title={title}>
+  <AppShell title={title}>
+    <slot />
+  </AppShell>
+</AppLayout>

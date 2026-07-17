@@ -1,0 +1,1 @@
+export const DEFAULT_DAILY_MENU_PRICE = 12000;

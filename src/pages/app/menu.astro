@@ -1,0 +1,8 @@
+---
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import DailyMenuPage from "@/features/menu/components/DailyMenuPage";
+---
+
+<DashboardLayout title="Menú del día">
+  <DailyMenuPage client:load />
+</DashboardLayout>

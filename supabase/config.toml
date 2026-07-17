@@ -1,0 +1,5 @@
+[functions.generate-post-text]
+verify_jwt = true
+
+[functions.instagram-connection]
+verify_jwt = true
