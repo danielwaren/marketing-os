@@ -3,3 +3,6 @@ verify_jwt = true
 
 [functions.instagram-connection]
 verify_jwt = true
+
+[functions.instagram-publish]
+verify_jwt = true

@@ -7,6 +7,7 @@ import type {
   InstagramConnectionInput,
   InstagramConnectionStatus,
   InstagramErrorCode,
+  InstagramPublishResult,
 } from "../types/instagram";
 
 interface FunctionErrorPayload {
@@ -114,4 +115,52 @@ export async function disconnectInstagram(
     action: "disconnect",
     workspaceId,
   });
+}
+
+export async function publishInstagramPost(
+  workspaceId: string,
+  postId: string
+) {
+  const { data, error } =
+    await supabase.functions.invoke<InstagramPublishResult>(
+      "instagram-publish",
+      { body: { workspaceId, postId } }
+    );
+
+  if (error) {
+    let message = error.message;
+
+    if (error instanceof FunctionsHttpError) {
+      try {
+        const context =
+          await error.context.json() as FunctionErrorPayload;
+
+        if (typeof context.error === "string") {
+          message = context.error;
+        }
+      } catch {
+        // Mantiene el mensaje original de Supabase.
+      }
+    } else {
+      message =
+        "No fue posible conectar con el servicio de publicación.";
+    }
+
+    return {
+      data: null,
+      error: createServiceError(message),
+    };
+  }
+
+  if (!data?.published) {
+    return {
+      data: null,
+      error: createServiceError(
+        "Instagram no confirmó la publicación.",
+        "invalid_response"
+      ),
+    };
+  }
+
+  return { data, error: null };
 }

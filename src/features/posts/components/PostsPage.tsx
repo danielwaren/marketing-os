@@ -21,6 +21,8 @@ import { InstagramPostPreview } from "./InstagramPostPreview";
 import { useDailyMenu } from "@/features/menu/hooks/useDailyMenu";
 import { MenuPhoto } from "@/features/menu/components/MenuPhoto";
 import { PostScheduler } from "@/features/calendar/components/PostScheduler";
+import { useInstagramConnection } from "@/features/instagram/hooks/useInstagramConnection";
+import { publishInstagramPost } from "@/features/instagram/services/instagram.service";
 
 import type {
   Post,
@@ -69,11 +71,28 @@ export default function PostsPage() {
     create,
     update,
     remove,
+    refresh,
   } = usePosts();
 
   const {
     menu,
   } = useDailyMenu();
+
+  const { status: instagramStatus } =
+    useInstagramConnection(workspace?.id ?? null);
+
+  const instagramConnected =
+    instagramStatus?.connected ?? false;
+
+  const [publishingPostId, setPublishingPostId] =
+    useState<string | null>(null);
+
+  const [publishFeedback, setPublishFeedback] =
+    useState<{
+      postId: string;
+      type: "success" | "error";
+      message: string;
+    } | null>(null);
 
   const [creating, setCreating] =
     useState(false);
@@ -185,6 +204,42 @@ export default function PostsPage() {
     });
 
     setUpdatingStatusPostId(null);
+  }
+
+  async function handlePublish(post: Post) {
+    if (!workspace) return;
+
+    const confirmed = window.confirm(
+      `¿Publicar "${post.title}" en Instagram ahora?`
+    );
+
+    if (!confirmed) return;
+
+    setPublishingPostId(post.id);
+    setPublishFeedback(null);
+
+    const result = await publishInstagramPost(
+      workspace.id,
+      post.id
+    );
+
+    if (result.error) {
+      setPublishFeedback({
+        postId: post.id,
+        type: "error",
+        message: result.error.message,
+      });
+    } else {
+      setPublishFeedback({
+        postId: post.id,
+        type: "success",
+        message: "Publicado en Instagram.",
+      });
+
+      await refresh();
+    }
+
+    setPublishingPostId(null);
   }
 
   async function handleDuplicate(post: Post) {
@@ -523,6 +578,27 @@ export default function PostsPage() {
                   )}
 
                   <div className="flex flex-wrap gap-2">
+                    {instagramConnected &&
+                      post.platform === "instagram" &&
+                      post.menu?.media &&
+                      post.status !== "published" && (
+                        <Button
+                          disabled={
+                            publishingPostId === post.id ||
+                            deletingPostId === post.id ||
+                            duplicatingPostId === post.id ||
+                            updatingStatusPostId === post.id
+                          }
+                          onClick={() =>
+                            handlePublish(post)
+                          }
+                        >
+                          {publishingPostId === post.id
+                            ? "Publicando..."
+                            : "Publicar en Instagram"}
+                        </Button>
+                      )}
+
                     {post.platform === "instagram" && (
                       <Button
                         variant="outline"
@@ -589,6 +665,18 @@ export default function PostsPage() {
                       </>
                     )}
                   </div>
+
+                  {publishFeedback?.postId === post.id && (
+                    <p
+                      className={`w-full text-sm ${
+                        publishFeedback.type === "success"
+                          ? "text-emerald-700"
+                          : "text-destructive"
+                      }`}
+                    >
+                      {publishFeedback.message}
+                    </p>
+                  )}
                 </CardFooter>
               </Card>
             ))}

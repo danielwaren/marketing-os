@@ -29,3 +29,9 @@ export interface InstagramConnectionError {
   code: InstagramErrorCode;
   message: string;
 }
+
+export interface InstagramPublishResult {
+  published: boolean;
+  mediaId: string;
+  permalink: string | null;
+}
