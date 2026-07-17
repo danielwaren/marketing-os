@@ -194,7 +194,7 @@ MÓDULO CALENDAR CERRADO
 
 # INSTAGRAM
 
-## IG-001
+## IG-001 ✅
 Conectar Meta
 
 ## IG-002

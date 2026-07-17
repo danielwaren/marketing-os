@@ -13,9 +13,30 @@ Módulos cerrados:
 - AI
 - Calendar
 
-Próximo módulo:
+Módulo en desarrollo:
 
 - Instagram
+
+Ticket actual:
+
+- IG-002 — Publicar
+
+## Despliegue
+
+Repo GitHub: https://github.com/danielwaren/marketing-os
+Producción (Vercel): https://marketing-os-n1gi.vercel.app (auto-deploy desde main; variables PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY configuradas).
+
+## Instagram (Meta)
+
+App de Meta "HostalMonchito" (Instagram API con inicio de sesión de Instagram).
+- Instagram App ID (público): 975230175570239
+- INSTAGRAM_APP_SECRET: secreto de Edge Functions en Supabase (32 caracteres; ojo: NO confundir con otras claves largas).
+- Redirect URI registrada en Meta: https://marketing-os-n1gi.vercel.app/app/instagram
+- Cuenta conectada de prueba: @hostalmonchito (ID 17841450002347432).
+- Permisos activos (test): instagram_business_basic, instagram_business_content_publish (+ manage_messages/comments/insights agregados en el scope de autorización).
+- La app de Meta sigue en modo desarrollo: publicar en cuentas de terceros requiere App Review de Meta.
+
+IG-001 está terminado. Feature src/features/instagram con tabla instagram_connections, Edge Function instagram-connection (status/connect/disconnect, intercambia code→token corto→token de larga duración ~60 días) y pantalla /app/instagram con "Conectar con Instagram" / "Conectado como @x" / "Desconectar". Verificado end-to-end en producción.
 
 CAL-001 está terminado. Vista mensual del calendario en /app/calendar con navegación entre meses, día actual resaltado y las publicaciones ubicadas según scheduled_at (programadas) o published_at (publicadas), con un punto de color por estado.
 
