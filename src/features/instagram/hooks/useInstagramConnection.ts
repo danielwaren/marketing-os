@@ -20,14 +20,15 @@ function getRedirectUri() {
 }
 
 export function buildInstagramAuthorizeUrl() {
-  const params = new URLSearchParams({
-    client_id: INSTAGRAM_APP_ID,
-    redirect_uri: getRedirectUri(),
-    response_type: "code",
-    scope: INSTAGRAM_OAUTH_SCOPES,
-  });
+  const params = [
+    "force_reauth=true",
+    `client_id=${INSTAGRAM_APP_ID}`,
+    `redirect_uri=${getRedirectUri()}`,
+    "response_type=code",
+    `scope=${encodeURIComponent(INSTAGRAM_OAUTH_SCOPES)}`,
+  ].join("&");
 
-  return `${INSTAGRAM_AUTHORIZE_URL}?${params.toString()}`;
+  return `${INSTAGRAM_AUTHORIZE_URL}?${params}`;
 }
 
 export function useInstagramConnection(
