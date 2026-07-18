@@ -203,7 +203,7 @@ Publicar
 ## IG-003 ✅
 Programar
 
-## IG-004
+## IG-004 ✅
 Historias
 
 ## IG-005

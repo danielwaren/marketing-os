@@ -19,7 +19,7 @@ Módulo en desarrollo:
 
 Ticket actual:
 
-- IG-004 — Historias
+- IG-005 — Carruseles
 
 ## Cron (publicación automática)
 
@@ -45,6 +45,8 @@ IG-001 está terminado. Feature src/features/instagram con tabla instagram_conne
 IG-002 está terminado. Edge Function instagram-publish publica un post (imagen + caption) en la cuenta conectada: genera signed URL de la imagen (server-side), crea el media container en graph.instagram.com, espera a que el status_code sea FINISHED, publica con media_publish y marca el post como published (con published_at). Botón "Publicar en Instagram" en la tarjeta del post (solo si Instagram está conectado, el post es de Instagram, tiene foto y no está publicado). Verificado con una publicación real en @hostalmonchito el 17 jul 2026. La lógica de Instagram (Graph API + signed URL + marcar published) se movió a supabase/functions/_shared/instagram.ts para reutilizarla.
 
 IG-003 está terminado. Publicación automática de posts programados: cron cada minuto (job publish-scheduled-instagram) → Edge Function publish-scheduled reutiliza el mismo flujo de publicación y marca published. Verificado el pipeline y la autorización (200 con secreto correcto, 401 sin él) sin publicar nada real. En la tarjeta de un post programado la UI indica "Se publicará automáticamente en Instagram a esa hora" (o pide conectar Instagram/agregar foto si falta). Pendiente: prueba end-to-end real (programar un post 1-2 min a futuro) requiere confirmación del usuario porque publica en la cuenta real.
+
+IG-004 está terminado. Permite publicar la foto del post como historia de Instagram (media_type=STORIES, sin caption). publishImagePost del módulo compartido acepta mediaType "feed" | "stories"; instagram-publish recibe mediaType. La historia NO cambia el estado del post (es efímera). Botón "Publicar historia" en la tarjeta (visible si Instagram está conectado, el post es de Instagram y tiene foto, sin importar el estado). UI verificada en producción; la publicación real de una historia queda a decisión del usuario (acción pública).
 
 CAL-001 está terminado. Vista mensual del calendario en /app/calendar con navegación entre meses, día actual resaltado y las publicaciones ubicadas según scheduled_at (programadas) o published_at (publicadas), con un punto de color por estado.
 
