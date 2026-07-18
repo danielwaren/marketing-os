@@ -12,14 +12,11 @@ Módulos cerrados:
 - Posts
 - AI
 - Calendar
-
-Módulo en desarrollo:
-
 - Instagram
 
-Ticket actual:
+Próximo módulo:
 
-- IG-005 — Carruseles
+- Analytics
 
 ## Cron (publicación automática)
 
@@ -47,6 +44,8 @@ IG-002 está terminado. Edge Function instagram-publish publica un post (imagen 
 IG-003 está terminado. Publicación automática de posts programados: cron cada minuto (job publish-scheduled-instagram) → Edge Function publish-scheduled reutiliza el mismo flujo de publicación y marca published. Verificado el pipeline y la autorización (200 con secreto correcto, 401 sin él) sin publicar nada real. En la tarjeta de un post programado la UI indica "Se publicará automáticamente en Instagram a esa hora" (o pide conectar Instagram/agregar foto si falta). Pendiente: prueba end-to-end real (programar un post 1-2 min a futuro) requiere confirmación del usuario porque publica en la cuenta real.
 
 IG-004 está terminado. Permite publicar la foto del post como historia de Instagram (media_type=STORIES, sin caption). publishImagePost del módulo compartido acepta mediaType "feed" | "stories"; instagram-publish recibe mediaType. La historia NO cambia el estado del post (es efímera). Botón "Publicar historia" en la tarjeta (visible si Instagram está conectado, el post es de Instagram y tiene foto, sin importar el estado). UI verificada en producción; la publicación real de una historia queda a decisión del usuario (acción pública).
+
+IG-005 está terminado. Permite publicar un carrusel (2-10 imágenes) eligiéndolas del banco de contenido. publishCarousel del módulo compartido crea un contenedor hijo por imagen (is_carousel_item), luego el contenedor padre (media_type=CAROUSEL, children) y publica. instagram-publish acepta mediaType="carousel" + mediaIds ordenados; verifica que las imágenes pertenezcan al workspace (getOrderedImagePaths) y marca el post published. Botón "Publicar carrusel" abre CarouselPickerDialog (selección múltiple con orden numerado 1-N). UI verificada de punta a punta; publicación real a decisión del usuario. MÓDULO INSTAGRAM CERRADO.
 
 CAL-001 está terminado. Vista mensual del calendario en /app/calendar con navegación entre meses, día actual resaltado y las publicaciones ubicadas según scheduled_at (programadas) o published_at (publicadas), con un punto de color por estado.
 

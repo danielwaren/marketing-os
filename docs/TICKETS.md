@@ -206,8 +206,10 @@ Programar
 ## IG-004 ✅
 Historias
 
-## IG-005
+## IG-005 ✅
 Carruseles
+
+MÓDULO INSTAGRAM CERRADO
 
 ---
 
