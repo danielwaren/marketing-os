@@ -6,6 +6,12 @@ export interface InstagramEngagement {
   accountsEngaged: number | null;
 }
 
+export interface ReachByFollowType {
+  follower: number | null;
+  nonFollower: number | null;
+  unknown: number | null;
+}
+
 export interface InstagramInsights {
   username: string | null;
   followersCount: number | null;
@@ -14,6 +20,7 @@ export interface InstagramInsights {
   periodDays: number;
   reach: number | null;
   profileViews: number | null;
+  reachByFollowType: ReachByFollowType;
   engagement: InstagramEngagement;
   updatedAt: string;
 }

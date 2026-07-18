@@ -16,7 +16,7 @@ Módulos cerrados:
 
 Módulo en curso:
 
-- Analytics (ANA-001, ANA-002 listos)
+- Analytics (ANA-001, ANA-002, ANA-003 listos)
 
 ## Cron (publicación automática)
 
@@ -50,6 +50,8 @@ IG-005 está terminado. Permite publicar un carrusel (2-10 imágenes) eligiéndo
 ANA-001 está terminado. Panel de estadísticas en /app/analytics: resumen de la cuenta de Instagram conectada (foto, @usuario, seguidores y número de publicaciones) más dos tarjetas de métricas — Alcance y Visitas al perfil de los últimos 30 días. Edge Function instagram-insights (verify_jwt, verifica que el workspace pertenezca al usuario y usa la conexión guardada) obtiene el perfil (fields username,followers_count,media_count,profile_picture_url) y las métricas agregadas vía /{ig-user-id}/insights con metric_type=total_value y rango since/until de 30 días. La lógica reutilizable (fetchAccountProfile, fetchTotalValueMetric) vive en supabase/functions/_shared/instagram.ts para los siguientes tickets ANA. Cada métrica degrada a null (se muestra "—") si Instagram no la reporta, sin romper el panel. Si no hay cuenta conectada muestra un EmptyState con enlace a /app/instagram. Verificado con datos reales de @hostalmonchito (424 seguidores, 21 publicaciones, alcance 197, 20 visitas al perfil). El engagement, alcance detallado, guardados, clics y comparativas quedan para ANA-002..006.
 
 ANA-002 está terminado. Sección "Interacciones (últimos 30 días)" en /app/analytics con cinco tarjetas: Interacciones totales, Cuentas que interactuaron, Me gusta, Comentarios y Compartidos. La Edge Function instagram-insights agrega estas métricas al mismo response (objeto engagement) reutilizando fetchTotalValueMetric sobre las métricas total_interactions, accounts_engaged, likes, comments y shares (metric_type=total_value, rango 30 días). Un valor 0 real se muestra como "0"; solo null (métrica no reportada) muestra "—". Verificado con datos reales de @hostalmonchito (9 interacciones, 10 cuentas, 8 me gusta, 0 comentarios, 0 compartidos). Guardados se reserva para ANA-004 y alcance detallado para ANA-003.
+
+ANA-003 está terminado. Tarjeta "Alcance por tipo de audiencia" en /app/analytics: desglosa el alcance de los últimos 30 días entre cuentas que siguen al negocio, que no lo siguen y sin clasificar, con una barra proporcional y porcentajes. La Edge Function instagram-insights agrega el campo reachByFollowType usando el nuevo helper compartido fetchReachByFollowType (_shared/instagram.ts), que llama a /{ig-user-id}/insights con metric=reach, metric_type=total_value y breakdown=follow_type, y parsea data[0].total_value.breakdowns[0].results por dimension_values (FOLLOWER/NON_FOLLOWER/UNKNOWN). Cada categoría es null si Instagram no la reporta (se omite del cálculo de porcentaje y muestra "—"; no se cuenta como 0). Verificado con datos reales de @hostalmonchito (No te siguen 12 = 6%, Te siguen 185 = 94%, Sin clasificar sin dato).
 
 CAL-001 está terminado. Vista mensual del calendario en /app/calendar con navegación entre meses, día actual resaltado y las publicaciones ubicadas según scheduled_at (programadas) o published_at (publicadas), con un punto de color por estado.
 

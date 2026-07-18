@@ -252,6 +252,89 @@ export async function fetchTotalValueMetric(options: {
   }
 }
 
+export interface ReachByFollowType {
+  follower: number | null;
+  nonFollower: number | null;
+  unknown: number | null;
+}
+
+// Desglosa el alcance según si la cuenta que vio el contenido sigue
+// o no al negocio. Devuelve null por categoría si Instagram no la reporta.
+export async function fetchReachByFollowType(options: {
+  igUserId: string;
+  accessToken: string;
+  sinceUnix: number;
+  untilUnix: number;
+}): Promise<ReachByFollowType> {
+  const url = new URL(
+    `${GRAPH_BASE}/${options.igUserId}/insights`
+  );
+
+  url.searchParams.set("metric", "reach");
+  url.searchParams.set("period", "day");
+  url.searchParams.set("metric_type", "total_value");
+  url.searchParams.set("breakdown", "follow_type");
+  url.searchParams.set(
+    "since",
+    String(options.sinceUnix)
+  );
+  url.searchParams.set(
+    "until",
+    String(options.untilUnix)
+  );
+  url.searchParams.set(
+    "access_token",
+    options.accessToken
+  );
+
+  const empty: ReachByFollowType = {
+    follower: null,
+    nonFollower: null,
+    unknown: null,
+  };
+
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      return empty;
+    }
+
+    const data = await response.json() as {
+      data?: Array<{
+        total_value?: {
+          breakdowns?: Array<{
+            results?: Array<{
+              dimension_values?: string[];
+              value?: number;
+            }>;
+          }>;
+        };
+      }>;
+    };
+
+    const results =
+      data.data?.[0]?.total_value?.breakdowns?.[0]
+        ?.results ?? [];
+
+    const byDimension = new Map(
+      results.map((result) => [
+        result.dimension_values?.[0],
+        result.value ?? null,
+      ])
+    );
+
+    return {
+      follower: byDimension.get("FOLLOWER") ?? null,
+      nonFollower:
+        byDimension.get("NON_FOLLOWER") ?? null,
+      unknown: byDimension.get("UNKNOWN") ?? null,
+    };
+  } catch {
+    return empty;
+  }
+}
+
 export async function fetchPermalink(
   mediaId: string,
   accessToken: string

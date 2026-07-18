@@ -1,5 +1,6 @@
 import {
   fetchAccountProfile,
+  fetchReachByFollowType,
   fetchTotalValueMetric,
   getConnection,
   restHeaders,
@@ -196,6 +197,7 @@ Deno.serve(async (request) => {
       comments,
       shares,
       accountsEngaged,
+      reachByFollowType,
     ] = await Promise.all([
       metric("reach"),
       metric("profile_views"),
@@ -204,6 +206,12 @@ Deno.serve(async (request) => {
       metric("comments"),
       metric("shares"),
       metric("accounts_engaged"),
+      fetchReachByFollowType({
+        igUserId: connection.ig_user_id,
+        accessToken: connection.access_token,
+        sinceUnix,
+        untilUnix,
+      }),
     ]);
 
     return jsonResponse({
@@ -214,6 +222,7 @@ Deno.serve(async (request) => {
       periodDays: WINDOW_DAYS,
       reach,
       profileViews,
+      reachByFollowType,
       engagement: {
         totalInteractions,
         likes,

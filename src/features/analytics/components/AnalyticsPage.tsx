@@ -11,6 +11,7 @@ import { useWorkspace } from "@/features/workspace/hooks/useWorkspace";
 
 import { useInstagramInsights } from "../hooks/useInstagramInsights";
 import { MetricCard } from "./MetricCard";
+import { ReachBreakdown } from "./ReachBreakdown";
 
 export default function AnalyticsPage() {
   const { workspace, loading: loadingWorkspace } =
@@ -129,6 +130,10 @@ export default function AnalyticsPage() {
             />
           </div>
 
+          <ReachBreakdown
+            breakdown={insights.reachByFollowType}
+          />
+
           <div className="space-y-4">
             <div>
               <h2 className="text-lg font-semibold">
@@ -179,9 +184,8 @@ export default function AnalyticsPage() {
               dateStyle: "medium",
               timeStyle: "short",
             }).format(new Date(insights.updatedAt))}
-            . El alcance detallado, guardados, clics y
-            comparativas llegarán en los próximos avances del
-            módulo.
+            . Los guardados, clics y comparativas llegarán en
+            los próximos avances del módulo.
           </p>
         </>
       )}
