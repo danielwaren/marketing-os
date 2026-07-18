@@ -19,7 +19,11 @@ Módulo en desarrollo:
 
 Ticket actual:
 
-- IG-003 — Programar (publicación automática programada)
+- IG-004 — Historias
+
+## Cron (publicación automática)
+
+pg_cron + pg_net programan el job `publish-scheduled-instagram` cada minuto (`* * * * *`), que llama a la Edge Function publish-scheduled (verify_jwt=false, protegida por un secreto en Vault `ig_cron_secret` verificado con la función public.verify_ig_cron_secret). Publica los posts scheduled+instagram vencidos y los marca como published. Para pausar/reactivar: `select cron.unschedule('publish-scheduled-instagram')` / volver a `cron.schedule(...)`. Limitación conocida (MVP): no hay lock formal; con cron cada minuto y publicación <30s no hay solapamiento; si un post falla queda scheduled y se reintenta al minuto siguiente.
 
 ## Despliegue
 
@@ -38,7 +42,9 @@ App de Meta "HostalMonchito" (Instagram API con inicio de sesión de Instagram).
 
 IG-001 está terminado. Feature src/features/instagram con tabla instagram_connections, Edge Function instagram-connection (status/connect/disconnect, intercambia code→token corto→token de larga duración ~60 días) y pantalla /app/instagram con "Conectar con Instagram" / "Conectado como @x" / "Desconectar". Verificado end-to-end en producción.
 
-IG-002 está terminado. Edge Function instagram-publish publica un post (imagen + caption) en la cuenta conectada: genera signed URL de la imagen (server-side), crea el media container en graph.instagram.com, espera a que el status_code sea FINISHED, publica con media_publish y marca el post como published (con published_at). Botón "Publicar en Instagram" en la tarjeta del post (solo si Instagram está conectado, el post es de Instagram, tiene foto y no está publicado). Verificado con una publicación real en @hostalmonchito el 17 jul 2026.
+IG-002 está terminado. Edge Function instagram-publish publica un post (imagen + caption) en la cuenta conectada: genera signed URL de la imagen (server-side), crea el media container en graph.instagram.com, espera a que el status_code sea FINISHED, publica con media_publish y marca el post como published (con published_at). Botón "Publicar en Instagram" en la tarjeta del post (solo si Instagram está conectado, el post es de Instagram, tiene foto y no está publicado). Verificado con una publicación real en @hostalmonchito el 17 jul 2026. La lógica de Instagram (Graph API + signed URL + marcar published) se movió a supabase/functions/_shared/instagram.ts para reutilizarla.
+
+IG-003 está terminado. Publicación automática de posts programados: cron cada minuto (job publish-scheduled-instagram) → Edge Function publish-scheduled reutiliza el mismo flujo de publicación y marca published. Verificado el pipeline y la autorización (200 con secreto correcto, 401 sin él) sin publicar nada real. En la tarjeta de un post programado la UI indica "Se publicará automáticamente en Instagram a esa hora" (o pide conectar Instagram/agregar foto si falta). Pendiente: prueba end-to-end real (programar un post 1-2 min a futuro) requiere confirmación del usuario porque publica en la cuenta real.
 
 CAL-001 está terminado. Vista mensual del calendario en /app/calendar con navegación entre meses, día actual resaltado y las publicaciones ubicadas según scheduled_at (programadas) o published_at (publicadas), con un punto de color por estado.
 

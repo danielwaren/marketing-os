@@ -200,7 +200,7 @@ Conectar Meta
 ## IG-002 ✅
 Publicar
 
-## IG-003
+## IG-003 ✅
 Programar
 
 ## IG-004
