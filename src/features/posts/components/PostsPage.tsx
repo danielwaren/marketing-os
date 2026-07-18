@@ -22,7 +22,11 @@ import { useDailyMenu } from "@/features/menu/hooks/useDailyMenu";
 import { MenuPhoto } from "@/features/menu/components/MenuPhoto";
 import { PostScheduler } from "@/features/calendar/components/PostScheduler";
 import { useInstagramConnection } from "@/features/instagram/hooks/useInstagramConnection";
-import { publishInstagramPost } from "@/features/instagram/services/instagram.service";
+import {
+  publishInstagramCarousel,
+  publishInstagramPost,
+} from "@/features/instagram/services/instagram.service";
+import { CarouselPickerDialog } from "@/features/instagram/components/CarouselPickerDialog";
 
 import type {
   Post,
@@ -87,8 +91,11 @@ export default function PostsPage() {
   const [publishing, setPublishing] =
     useState<{
       postId: string;
-      mediaType: "feed" | "stories";
+      mediaType: "feed" | "stories" | "carousel";
     } | null>(null);
+
+  const [carouselPost, setCarouselPost] =
+    useState<Post | null>(null);
 
   const [publishFeedback, setPublishFeedback] =
     useState<{
@@ -254,6 +261,45 @@ export default function PostsPage() {
     }
 
     setPublishing(null);
+  }
+
+  async function handleConfirmCarousel(
+    mediaIds: string[]
+  ) {
+    if (!workspace || !carouselPost) return;
+
+    const post = carouselPost;
+
+    setPublishing({
+      postId: post.id,
+      mediaType: "carousel",
+    });
+    setPublishFeedback(null);
+
+    const result = await publishInstagramCarousel(
+      workspace.id,
+      post.id,
+      mediaIds
+    );
+
+    if (result.error) {
+      setPublishFeedback({
+        postId: post.id,
+        type: "error",
+        message: result.error.message,
+      });
+    } else {
+      setPublishFeedback({
+        postId: post.id,
+        type: "success",
+        message: "Carrusel publicado en Instagram.",
+      });
+
+      await refresh();
+    }
+
+    setPublishing(null);
+    setCarouselPost(null);
   }
 
   async function handleDuplicate(post: Post) {
@@ -647,6 +693,28 @@ export default function PostsPage() {
                         </Button>
                       )}
 
+                    {instagramConnected &&
+                      post.platform === "instagram" &&
+                      post.status !== "published" && (
+                        <Button
+                          variant="outline"
+                          disabled={
+                            publishing?.postId === post.id ||
+                            deletingPostId === post.id ||
+                            duplicatingPostId === post.id ||
+                            updatingStatusPostId === post.id
+                          }
+                          onClick={() =>
+                            setCarouselPost(post)
+                          }
+                        >
+                          {publishing?.postId === post.id &&
+                          publishing.mediaType === "carousel"
+                            ? "Publicando carrusel..."
+                            : "Publicar carrusel"}
+                        </Button>
+                      )}
+
                     {post.platform === "instagram" && (
                       <Button
                         variant="outline"
@@ -740,6 +808,15 @@ export default function PostsPage() {
           workspace?.instagram_username ?? null
         }
         onClose={() => setPreviewPost(null)}
+      />
+
+      <CarouselPickerDialog
+        open={carouselPost !== null}
+        publishing={
+          publishing?.mediaType === "carousel"
+        }
+        onClose={() => setCarouselPost(null)}
+        onConfirm={handleConfirmCarousel}
       />
     </div>
   );

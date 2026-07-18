@@ -118,15 +118,13 @@ export async function disconnectInstagram(
   });
 }
 
-export async function publishInstagramPost(
-  workspaceId: string,
-  postId: string,
-  mediaType: InstagramMediaType = "feed"
+async function invokePublish(
+  body: Record<string, unknown>
 ) {
   const { data, error } =
     await supabase.functions.invoke<InstagramPublishResult>(
       "instagram-publish",
-      { body: { workspaceId, postId, mediaType } }
+      { body }
     );
 
   if (error) {
@@ -165,4 +163,29 @@ export async function publishInstagramPost(
   }
 
   return { data, error: null };
+}
+
+export async function publishInstagramPost(
+  workspaceId: string,
+  postId: string,
+  mediaType: InstagramMediaType = "feed"
+) {
+  return invokePublish({
+    workspaceId,
+    postId,
+    mediaType,
+  });
+}
+
+export async function publishInstagramCarousel(
+  workspaceId: string,
+  postId: string,
+  mediaIds: string[]
+) {
+  return invokePublish({
+    workspaceId,
+    postId,
+    mediaType: "carousel",
+    mediaIds,
+  });
 }

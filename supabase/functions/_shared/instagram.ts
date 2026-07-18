@@ -208,6 +208,51 @@ export async function publishImagePost(options: {
   );
 }
 
+export async function publishCarousel(options: {
+  igUserId: string;
+  accessToken: string;
+  imageUrls: string[];
+  caption: string;
+}) {
+  const childIds: string[] = [];
+
+  for (const imageUrl of options.imageUrls) {
+    const childId = await graphPost(
+      `${options.igUserId}/media`,
+      {
+        image_url: imageUrl,
+        is_carousel_item: "true",
+        access_token: options.accessToken,
+      }
+    );
+
+    childIds.push(childId);
+  }
+
+  const parentId = await graphPost(
+    `${options.igUserId}/media`,
+    {
+      media_type: "CAROUSEL",
+      children: childIds.join(","),
+      caption: options.caption,
+      access_token: options.accessToken,
+    }
+  );
+
+  await waitForContainerReady(
+    parentId,
+    options.accessToken
+  );
+
+  return graphPost(
+    `${options.igUserId}/media_publish`,
+    {
+      creation_id: parentId,
+      access_token: options.accessToken,
+    }
+  );
+}
+
 export async function markPostPublished(
   postId: string
 ) {

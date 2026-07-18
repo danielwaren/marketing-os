@@ -3,6 +3,7 @@ import {
   fetchPermalink,
   getConnection,
   markPostPublished,
+  publishCarousel,
   publishImagePost,
   restHeaders,
   SUPABASE_URL,
@@ -142,6 +143,52 @@ async function getOwnedPost(
   return posts[0] ?? null;
 }
 
+async function getOrderedImagePaths(
+  mediaIds: string[],
+  workspaceId: string
+): Promise<string[] | null> {
+  const url = new URL(
+    `${SUPABASE_URL}/rest/v1/media`
+  );
+
+  url.searchParams.set(
+    "id",
+    `in.(${mediaIds.join(",")})`
+  );
+  url.searchParams.set(
+    "workspace_id",
+    `eq.${workspaceId}`
+  );
+  url.searchParams.set("file_type", "eq.image");
+  url.searchParams.set(
+    "select",
+    "id,file_path"
+  );
+
+  const response = await fetch(url, {
+    headers: restHeaders(),
+  });
+  const rows =
+    await response.json() as Array<{
+      id: string;
+      file_path: string;
+    }>;
+
+  const byId = new Map(
+    rows.map((row) => [row.id, row.file_path])
+  );
+
+  const ordered = mediaIds.map((id) =>
+    byId.get(id)
+  );
+
+  if (ordered.some((path) => !path)) {
+    return null;
+  }
+
+  return ordered as string[];
+}
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", {
@@ -169,6 +216,7 @@ Deno.serve(async (request) => {
     workspaceId?: unknown;
     postId?: unknown;
     mediaType?: unknown;
+    mediaIds?: unknown;
   };
 
   try {
@@ -193,7 +241,28 @@ Deno.serve(async (request) => {
   const mediaType =
     payload.mediaType === "stories"
       ? "stories"
-      : "feed";
+      : payload.mediaType === "carousel"
+        ? "carousel"
+        : "feed";
+
+  const mediaIds = Array.isArray(payload.mediaIds)
+    ? payload.mediaIds.filter(
+        (id): id is string => typeof id === "string"
+      )
+    : [];
+
+  if (
+    mediaType === "carousel" &&
+    (mediaIds.length < 2 || mediaIds.length > 10)
+  ) {
+    return jsonResponse(
+      {
+        error:
+          "Un carrusel necesita entre 2 y 10 imágenes.",
+      },
+      400
+    );
+  }
 
   const post = await getOwnedPost(
     payload.postId,
@@ -218,18 +287,6 @@ Deno.serve(async (request) => {
     );
   }
 
-  const filePath = post.menu?.media?.file_path;
-
-  if (!filePath) {
-    return jsonResponse(
-      {
-        error:
-          "La publicación necesita una fotografía para publicarse en Instagram.",
-      },
-      400
-    );
-  }
-
   const connection = await getConnection(
     payload.workspaceId
   );
@@ -246,20 +303,67 @@ Deno.serve(async (request) => {
   }
 
   try {
-    const imageUrl = await createSignedImageUrl(
-      filePath
-    );
-    const mediaId = await publishImagePost({
-      igUserId: connection.ig_user_id,
-      accessToken: connection.access_token,
-      imageUrl,
-      caption: post.content,
-      mediaType,
-    });
+    let mediaId: string;
 
-    // Las historias son efímeras: no cambian el estado del post.
-    if (mediaType === "feed") {
+    if (mediaType === "carousel") {
+      const paths = await getOrderedImagePaths(
+        mediaIds,
+        payload.workspaceId
+      );
+
+      if (!paths) {
+        return jsonResponse(
+          {
+            error:
+              "Alguna imagen del carrusel no existe o no te pertenece.",
+          },
+          400
+        );
+      }
+
+      const imageUrls = await Promise.all(
+        paths.map((path) =>
+          createSignedImageUrl(path)
+        )
+      );
+
+      mediaId = await publishCarousel({
+        igUserId: connection.ig_user_id,
+        accessToken: connection.access_token,
+        imageUrls,
+        caption: post.content,
+      });
+
       await markPostPublished(post.id);
+    } else {
+      const filePath = post.menu?.media?.file_path;
+
+      if (!filePath) {
+        return jsonResponse(
+          {
+            error:
+              "La publicación necesita una fotografía para publicarse en Instagram.",
+          },
+          400
+        );
+      }
+
+      const imageUrl = await createSignedImageUrl(
+        filePath
+      );
+
+      mediaId = await publishImagePost({
+        igUserId: connection.ig_user_id,
+        accessToken: connection.access_token,
+        imageUrl,
+        caption: post.content,
+        mediaType,
+      });
+
+      // Las historias son efímeras: no cambian el estado del post.
+      if (mediaType === "feed") {
+        await markPostPublished(post.id);
+      }
     }
 
     const permalink = await fetchPermalink(
