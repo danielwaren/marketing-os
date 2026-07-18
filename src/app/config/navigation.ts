@@ -16,6 +16,10 @@ export const navigation = [
     href: "/app/calendar",
   },
   {
+    label: "Estadísticas",
+    href: "/app/analytics",
+  },
+  {
     label: "Configuración",
     href: "/app/settings",
   },

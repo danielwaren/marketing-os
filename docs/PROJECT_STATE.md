@@ -14,9 +14,9 @@ Módulos cerrados:
 - Calendar
 - Instagram
 
-Próximo módulo:
+Módulo en curso:
 
-- Analytics
+- Analytics (ANA-001 listo)
 
 ## Cron (publicación automática)
 
@@ -46,6 +46,8 @@ IG-003 está terminado. Publicación automática de posts programados: cron cada
 IG-004 está terminado. Permite publicar la foto del post como historia de Instagram (media_type=STORIES, sin caption). publishImagePost del módulo compartido acepta mediaType "feed" | "stories"; instagram-publish recibe mediaType. La historia NO cambia el estado del post (es efímera). Botón "Publicar historia" en la tarjeta (visible si Instagram está conectado, el post es de Instagram y tiene foto, sin importar el estado). UI verificada en producción; la publicación real de una historia queda a decisión del usuario (acción pública).
 
 IG-005 está terminado. Permite publicar un carrusel (2-10 imágenes) eligiéndolas del banco de contenido. publishCarousel del módulo compartido crea un contenedor hijo por imagen (is_carousel_item), luego el contenedor padre (media_type=CAROUSEL, children) y publica. instagram-publish acepta mediaType="carousel" + mediaIds ordenados; verifica que las imágenes pertenezcan al workspace (getOrderedImagePaths) y marca el post published. Botón "Publicar carrusel" abre CarouselPickerDialog (selección múltiple con orden numerado 1-N). UI verificada de punta a punta; publicación real a decisión del usuario. MÓDULO INSTAGRAM CERRADO.
+
+ANA-001 está terminado. Panel de estadísticas en /app/analytics: resumen de la cuenta de Instagram conectada (foto, @usuario, seguidores y número de publicaciones) más dos tarjetas de métricas — Alcance y Visitas al perfil de los últimos 30 días. Edge Function instagram-insights (verify_jwt, verifica que el workspace pertenezca al usuario y usa la conexión guardada) obtiene el perfil (fields username,followers_count,media_count,profile_picture_url) y las métricas agregadas vía /{ig-user-id}/insights con metric_type=total_value y rango since/until de 30 días. La lógica reutilizable (fetchAccountProfile, fetchTotalValueMetric) vive en supabase/functions/_shared/instagram.ts para los siguientes tickets ANA. Cada métrica degrada a null (se muestra "—") si Instagram no la reporta, sin romper el panel. Si no hay cuenta conectada muestra un EmptyState con enlace a /app/instagram. Verificado con datos reales de @hostalmonchito (424 seguidores, 21 publicaciones, alcance 197, 20 visitas al perfil). El engagement, alcance detallado, guardados, clics y comparativas quedan para ANA-002..006.
 
 CAL-001 está terminado. Vista mensual del calendario en /app/calendar con navegación entre meses, día actual resaltado y las publicaciones ubicadas según scheduled_at (programadas) o published_at (publicadas), con un punto de color por estado.
 

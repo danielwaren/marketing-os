@@ -149,6 +149,109 @@ async function waitForContainerReady(
   );
 }
 
+export interface AccountProfile {
+  username: string | null;
+  followersCount: number | null;
+  mediaCount: number | null;
+  profilePictureUrl: string | null;
+}
+
+export async function fetchAccountProfile(
+  igUserId: string,
+  accessToken: string
+): Promise<AccountProfile> {
+  const url = new URL(`${GRAPH_BASE}/${igUserId}`);
+
+  url.searchParams.set(
+    "fields",
+    "username,followers_count,media_count,profile_picture_url"
+  );
+  url.searchParams.set("access_token", accessToken);
+
+  const response = await fetch(url);
+  const data = await response.json() as {
+    username?: string;
+    followers_count?: number;
+    media_count?: number;
+    profile_picture_url?: string;
+  };
+
+  if (!response.ok) {
+    throw new Error(
+      "Instagram no devolvió los datos del perfil."
+    );
+  }
+
+  return {
+    username: data.username ?? null,
+    followersCount: data.followers_count ?? null,
+    mediaCount: data.media_count ?? null,
+    profilePictureUrl: data.profile_picture_url ?? null,
+  };
+}
+
+// Suma agregada de una métrica de cuenta durante un rango de días.
+// Devuelve null si Instagram no entrega el dato para no romper el panel.
+export async function fetchTotalValueMetric(options: {
+  igUserId: string;
+  accessToken: string;
+  metric: string;
+  sinceUnix: number;
+  untilUnix: number;
+}): Promise<number | null> {
+  const url = new URL(
+    `${GRAPH_BASE}/${options.igUserId}/insights`
+  );
+
+  url.searchParams.set("metric", options.metric);
+  url.searchParams.set("period", "day");
+  url.searchParams.set("metric_type", "total_value");
+  url.searchParams.set(
+    "since",
+    String(options.sinceUnix)
+  );
+  url.searchParams.set(
+    "until",
+    String(options.untilUnix)
+  );
+  url.searchParams.set(
+    "access_token",
+    options.accessToken
+  );
+
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json() as {
+      data?: Array<{
+        total_value?: { value?: number };
+        values?: Array<{ value?: number }>;
+      }>;
+    };
+
+    const entry = data.data?.[0];
+
+    if (typeof entry?.total_value?.value === "number") {
+      return entry.total_value.value;
+    }
+
+    if (Array.isArray(entry?.values)) {
+      return entry.values.reduce(
+        (sum, item) => sum + (item.value ?? 0),
+        0
+      );
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchPermalink(
   mediaId: string,
   accessToken: string
