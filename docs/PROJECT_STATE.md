@@ -19,7 +19,7 @@ Módulo en desarrollo:
 
 Ticket actual:
 
-- IG-002 — Publicar
+- IG-003 — Programar (publicación automática programada)
 
 ## Despliegue
 
@@ -37,6 +37,8 @@ App de Meta "HostalMonchito" (Instagram API con inicio de sesión de Instagram).
 - La app de Meta sigue en modo desarrollo: publicar en cuentas de terceros requiere App Review de Meta.
 
 IG-001 está terminado. Feature src/features/instagram con tabla instagram_connections, Edge Function instagram-connection (status/connect/disconnect, intercambia code→token corto→token de larga duración ~60 días) y pantalla /app/instagram con "Conectar con Instagram" / "Conectado como @x" / "Desconectar". Verificado end-to-end en producción.
+
+IG-002 está terminado. Edge Function instagram-publish publica un post (imagen + caption) en la cuenta conectada: genera signed URL de la imagen (server-side), crea el media container en graph.instagram.com, espera a que el status_code sea FINISHED, publica con media_publish y marca el post como published (con published_at). Botón "Publicar en Instagram" en la tarjeta del post (solo si Instagram está conectado, el post es de Instagram, tiene foto y no está publicado). Verificado con una publicación real en @hostalmonchito el 17 jul 2026.
 
 CAL-001 está terminado. Vista mensual del calendario en /app/calendar con navegación entre meses, día actual resaltado y las publicaciones ubicadas según scheduled_at (programadas) o published_at (publicadas), con un punto de color por estado.
 

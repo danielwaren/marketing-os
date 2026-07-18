@@ -197,7 +197,7 @@ MÓDULO CALENDAR CERRADO
 ## IG-001 ✅
 Conectar Meta
 
-## IG-002
+## IG-002 ✅
 Publicar
 
 ## IG-003
