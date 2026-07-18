@@ -129,14 +129,59 @@ export default function AnalyticsPage() {
             />
           </div>
 
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold">
+                Interacciones (últimos {periodDays} días)
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Cómo respondió la audiencia al contenido del
+                período.
+              </p>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <MetricCard
+                label="Interacciones totales"
+                value={insights.engagement.totalInteractions}
+                hint="Me gusta, comentarios y compartidos sumados."
+              />
+
+              <MetricCard
+                label="Cuentas que interactuaron"
+                value={insights.engagement.accountsEngaged}
+                hint="Cuentas únicas que interactuaron."
+              />
+
+              <MetricCard
+                label="Me gusta"
+                value={insights.engagement.likes}
+                hint="Reacciones al contenido."
+              />
+
+              <MetricCard
+                label="Comentarios"
+                value={insights.engagement.comments}
+                hint="Comentarios recibidos."
+              />
+
+              <MetricCard
+                label="Compartidos"
+                value={insights.engagement.shares}
+                hint="Veces que se compartió el contenido."
+              />
+            </div>
+          </div>
+
           <p className="text-xs text-muted-foreground">
             Actualizado el{" "}
             {new Intl.DateTimeFormat("es-CL", {
               dateStyle: "medium",
               timeStyle: "short",
             }).format(new Date(insights.updatedAt))}
-            . El engagement, guardados, clics y comparativas
-            llegarán en los próximos avances del módulo.
+            . El alcance detallado, guardados, clics y
+            comparativas llegarán en los próximos avances del
+            módulo.
           </p>
         </>
       )}

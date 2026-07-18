@@ -174,26 +174,36 @@ Deno.serve(async (request) => {
     const sinceUnix =
       untilUnix - WINDOW_DAYS * DAY_SECONDS;
 
+    const metric = (name: string) =>
+      fetchTotalValueMetric({
+        igUserId: connection.ig_user_id,
+        accessToken: connection.access_token,
+        metric: name,
+        sinceUnix,
+        untilUnix,
+      });
+
     const profile = await fetchAccountProfile(
       connection.ig_user_id,
       connection.access_token
     );
 
-    const [reach, profileViews] = await Promise.all([
-      fetchTotalValueMetric({
-        igUserId: connection.ig_user_id,
-        accessToken: connection.access_token,
-        metric: "reach",
-        sinceUnix,
-        untilUnix,
-      }),
-      fetchTotalValueMetric({
-        igUserId: connection.ig_user_id,
-        accessToken: connection.access_token,
-        metric: "profile_views",
-        sinceUnix,
-        untilUnix,
-      }),
+    const [
+      reach,
+      profileViews,
+      totalInteractions,
+      likes,
+      comments,
+      shares,
+      accountsEngaged,
+    ] = await Promise.all([
+      metric("reach"),
+      metric("profile_views"),
+      metric("total_interactions"),
+      metric("likes"),
+      metric("comments"),
+      metric("shares"),
+      metric("accounts_engaged"),
     ]);
 
     return jsonResponse({
@@ -204,6 +214,13 @@ Deno.serve(async (request) => {
       periodDays: WINDOW_DAYS,
       reach,
       profileViews,
+      engagement: {
+        totalInteractions,
+        likes,
+        comments,
+        shares,
+        accountsEngaged,
+      },
       updatedAt: new Date().toISOString(),
     });
   } catch (error) {

@@ -1,3 +1,11 @@
+export interface InstagramEngagement {
+  totalInteractions: number | null;
+  likes: number | null;
+  comments: number | null;
+  shares: number | null;
+  accountsEngaged: number | null;
+}
+
 export interface InstagramInsights {
   username: string | null;
   followersCount: number | null;
@@ -6,6 +14,7 @@ export interface InstagramInsights {
   periodDays: number;
   reach: number | null;
   profileViews: number | null;
+  engagement: InstagramEngagement;
   updatedAt: string;
 }
 

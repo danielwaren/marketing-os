@@ -218,7 +218,7 @@ MÓDULO INSTAGRAM CERRADO
 ## ANA-001 ✅
 Dashboard
 
-## ANA-002
+## ANA-002 ✅
 Engagement
 
 ## ANA-003
