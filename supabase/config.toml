@@ -6,3 +6,6 @@ verify_jwt = true
 
 [functions.instagram-publish]
 verify_jwt = true
+
+[functions.publish-scheduled]
+verify_jwt = false

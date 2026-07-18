@@ -494,6 +494,17 @@ export default function PostsPage() {
                         </span>
                       </span>
 
+                      {instagramConnected &&
+                      post.menu?.media ? (
+                        <span className="text-xs text-muted-foreground">
+                          Se publicará automáticamente en Instagram a esa hora.
+                        </span>
+                      ) : (
+                        <span className="text-xs text-amber-700">
+                          Conecta Instagram y agrega una foto para la publicación automática.
+                        </span>
+                      )}
+
                       <div className="flex flex-wrap items-center gap-2">
                         <PostScheduler
                           initialValue={
