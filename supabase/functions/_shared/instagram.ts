@@ -168,19 +168,30 @@ export async function fetchPermalink(
   return data.permalink ?? null;
 }
 
+export type InstagramMediaType = "feed" | "stories";
+
 export async function publishImagePost(options: {
   igUserId: string;
   accessToken: string;
   imageUrl: string;
   caption: string;
+  mediaType?: InstagramMediaType;
 }) {
+  const isStory = options.mediaType === "stories";
+  const containerParams: Record<string, string> = {
+    image_url: options.imageUrl,
+    access_token: options.accessToken,
+  };
+
+  if (isStory) {
+    containerParams.media_type = "STORIES";
+  } else {
+    containerParams.caption = options.caption;
+  }
+
   const containerId = await graphPost(
     `${options.igUserId}/media`,
-    {
-      image_url: options.imageUrl,
-      caption: options.caption,
-      access_token: options.accessToken,
-    }
+    containerParams
   );
 
   await waitForContainerReady(

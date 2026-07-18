@@ -84,8 +84,11 @@ export default function PostsPage() {
   const instagramConnected =
     instagramStatus?.connected ?? false;
 
-  const [publishingPostId, setPublishingPostId] =
-    useState<string | null>(null);
+  const [publishing, setPublishing] =
+    useState<{
+      postId: string;
+      mediaType: "feed" | "stories";
+    } | null>(null);
 
   const [publishFeedback, setPublishFeedback] =
     useState<{
@@ -206,21 +209,27 @@ export default function PostsPage() {
     setUpdatingStatusPostId(null);
   }
 
-  async function handlePublish(post: Post) {
+  async function handlePublish(
+    post: Post,
+    mediaType: "feed" | "stories"
+  ) {
     if (!workspace) return;
 
     const confirmed = window.confirm(
-      `¿Publicar "${post.title}" en Instagram ahora?`
+      mediaType === "stories"
+        ? `¿Publicar "${post.title}" como historia de Instagram ahora?`
+        : `¿Publicar "${post.title}" en Instagram ahora?`
     );
 
     if (!confirmed) return;
 
-    setPublishingPostId(post.id);
+    setPublishing({ postId: post.id, mediaType });
     setPublishFeedback(null);
 
     const result = await publishInstagramPost(
       workspace.id,
-      post.id
+      post.id,
+      mediaType
     );
 
     if (result.error) {
@@ -233,13 +242,18 @@ export default function PostsPage() {
       setPublishFeedback({
         postId: post.id,
         type: "success",
-        message: "Publicado en Instagram.",
+        message:
+          mediaType === "stories"
+            ? "Historia publicada en Instagram."
+            : "Publicado en Instagram.",
       });
 
-      await refresh();
+      if (mediaType === "feed") {
+        await refresh();
+      }
     }
 
-    setPublishingPostId(null);
+    setPublishing(null);
   }
 
   async function handleDuplicate(post: Post) {
@@ -595,18 +609,41 @@ export default function PostsPage() {
                       post.status !== "published" && (
                         <Button
                           disabled={
-                            publishingPostId === post.id ||
+                            publishing?.postId === post.id ||
                             deletingPostId === post.id ||
                             duplicatingPostId === post.id ||
                             updatingStatusPostId === post.id
                           }
                           onClick={() =>
-                            handlePublish(post)
+                            handlePublish(post, "feed")
                           }
                         >
-                          {publishingPostId === post.id
+                          {publishing?.postId === post.id &&
+                          publishing.mediaType === "feed"
                             ? "Publicando..."
                             : "Publicar en Instagram"}
+                        </Button>
+                      )}
+
+                    {instagramConnected &&
+                      post.platform === "instagram" &&
+                      post.menu?.media && (
+                        <Button
+                          variant="outline"
+                          disabled={
+                            publishing?.postId === post.id ||
+                            deletingPostId === post.id ||
+                            duplicatingPostId === post.id ||
+                            updatingStatusPostId === post.id
+                          }
+                          onClick={() =>
+                            handlePublish(post, "stories")
+                          }
+                        >
+                          {publishing?.postId === post.id &&
+                          publishing.mediaType === "stories"
+                            ? "Publicando historia..."
+                            : "Publicar historia"}
                         </Button>
                       )}
 

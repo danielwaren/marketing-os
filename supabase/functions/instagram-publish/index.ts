@@ -168,6 +168,7 @@ Deno.serve(async (request) => {
   let payload: {
     workspaceId?: unknown;
     postId?: unknown;
+    mediaType?: unknown;
   };
 
   try {
@@ -188,6 +189,11 @@ Deno.serve(async (request) => {
       400
     );
   }
+
+  const mediaType =
+    payload.mediaType === "stories"
+      ? "stories"
+      : "feed";
 
   const post = await getOwnedPost(
     payload.postId,
@@ -248,9 +254,13 @@ Deno.serve(async (request) => {
       accessToken: connection.access_token,
       imageUrl,
       caption: post.content,
+      mediaType,
     });
 
-    await markPostPublished(post.id);
+    // Las historias son efímeras: no cambian el estado del post.
+    if (mediaType === "feed") {
+      await markPostPublished(post.id);
+    }
 
     const permalink = await fetchPermalink(
       mediaId,
@@ -260,6 +270,7 @@ Deno.serve(async (request) => {
     return jsonResponse({
       published: true,
       mediaId,
+      mediaType,
       permalink,
     });
   } catch (error) {

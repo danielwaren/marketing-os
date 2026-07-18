@@ -30,8 +30,11 @@ export interface InstagramConnectionError {
   message: string;
 }
 
+export type InstagramMediaType = "feed" | "stories";
+
 export interface InstagramPublishResult {
   published: boolean;
   mediaId: string;
+  mediaType: InstagramMediaType;
   permalink: string | null;
 }

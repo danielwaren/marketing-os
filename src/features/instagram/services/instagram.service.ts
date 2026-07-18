@@ -7,6 +7,7 @@ import type {
   InstagramConnectionInput,
   InstagramConnectionStatus,
   InstagramErrorCode,
+  InstagramMediaType,
   InstagramPublishResult,
 } from "../types/instagram";
 
@@ -119,12 +120,13 @@ export async function disconnectInstagram(
 
 export async function publishInstagramPost(
   workspaceId: string,
-  postId: string
+  postId: string,
+  mediaType: InstagramMediaType = "feed"
 ) {
   const { data, error } =
     await supabase.functions.invoke<InstagramPublishResult>(
       "instagram-publish",
-      { body: { workspaceId, postId } }
+      { body: { workspaceId, postId, mediaType } }
     );
 
   if (error) {
