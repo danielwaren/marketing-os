@@ -1,4 +1,5 @@
 export type AIProviderName =
+  | "claude"
   | "gemini"
   | "groq"
   | "templates"
@@ -33,6 +34,19 @@ export type AIErrorCode =
   | "service_unavailable";
 
 export type AIPostVersionCount = 2 | 3;
+
+// Solo se completa cuando el proveedor es Claude (API de Anthropic
+// devuelve el conteo real de tokens en cada respuesta).
+export interface AIUsage {
+  inputTokens: number;
+  outputTokens: number;
+}
+
+export interface AIUsageSummary {
+  inputTokens: number;
+  outputTokens: number;
+  generations: number;
+}
 
 export interface GeneratePostInput {
   action?: AIPostAction;
@@ -85,6 +99,7 @@ export interface GeneratePostResult {
   fallback: boolean;
   notice?: string;
   context?: GeneratePostContext;
+  usage?: AIUsage;
 }
 
 export interface GeneratePostError {
@@ -97,6 +112,7 @@ export interface GeneratePostVersion {
   text: string;
   provider: AIProviderName;
   fallback: boolean;
+  usage?: AIUsage;
 }
 
 export interface GeneratePostVersionsResult {

@@ -7,6 +7,9 @@ import {
   type AIProvider,
 } from "../../../src/features/ai/services/providers/ai-provider.interface.ts";
 import {
+  ClaudeProvider,
+} from "../../../src/features/ai/services/providers/claude.provider.ts";
+import {
   GeminiProvider,
 } from "../../../src/features/ai/services/providers/gemini.provider.ts";
 import {
@@ -205,36 +208,50 @@ function getSelectedProvider(): AIProviderName {
     : DEFAULT_AI_PROVIDER;
 }
 
+const PROVIDER_LABELS: Record<string, string> = {
+  claude: "Claude",
+  gemini: "Gemini",
+  groq: "Groq",
+};
+
+const PROVIDER_FALLBACK_ORDER: Record<
+  AIProviderName,
+  AIProviderName[]
+> = {
+  claude: ["claude", "gemini", "groq"],
+  gemini: ["gemini", "claude", "groq"],
+  groq: ["groq", "claude", "gemini"],
+  templates: [],
+  openai: [],
+};
+
 function getRemoteProviders(
   selected: AIProviderName
 ) {
+  const claudeKey =
+    Deno.env.get("ANTHROPIC_API_KEY")?.trim() ?? "";
   const geminiKey =
     Deno.env.get("GEMINI_API_KEY")?.trim() ?? "";
   const groqKey =
     Deno.env.get("GROQ_API_KEY")?.trim() ?? "";
-  const providers: AIProvider[] = [];
 
-  if (selected === "gemini") {
-    if (geminiKey) {
-      providers.push(new GeminiProvider(geminiKey));
-    }
+  const factories: Record<
+    string,
+    () => AIProvider | null
+  > = {
+    claude: () =>
+      claudeKey ? new ClaudeProvider(claudeKey) : null,
+    gemini: () =>
+      geminiKey ? new GeminiProvider(geminiKey) : null,
+    groq: () =>
+      groqKey ? new GroqProvider(groqKey) : null,
+  };
 
-    if (groqKey) {
-      providers.push(new GroqProvider(groqKey));
-    }
-  }
-
-  if (selected === "groq") {
-    if (groqKey) {
-      providers.push(new GroqProvider(groqKey));
-    }
-
-    if (geminiKey) {
-      providers.push(new GeminiProvider(geminiKey));
-    }
-  }
-
-  return providers;
+  return PROVIDER_FALLBACK_ORDER[selected]
+    .map((name) => factories[name]?.())
+    .filter((provider): provider is AIProvider =>
+      Boolean(provider)
+    );
 }
 
 function getFallbackNotice(
@@ -248,7 +265,7 @@ function getFallbackNotice(
     return "Se utilizó una plantilla local editable.";
   }
 
-  return "No existe una clave válida de Gemini o Groq. Se utilizó una plantilla local editable.";
+  return "No existe una clave válida de Claude, Gemini o Groq. Se utilizó una plantilla local editable.";
 }
 
 function getProviderNotice(
@@ -259,15 +276,13 @@ function getProviderNotice(
     return undefined;
   }
 
-  if (provider === "groq") {
-    return "Gemini no estaba disponible. Se utilizó Groq como proveedor alternativo.";
+  const label = PROVIDER_LABELS[provider];
+
+  if (!label) {
+    return undefined;
   }
 
-  if (provider === "gemini") {
-    return "Groq no estaba disponible. Se utilizó Gemini como proveedor alternativo.";
-  }
-
-  return undefined;
+  return `${PROVIDER_LABELS[selected] ?? selected} no estaba disponible. Se utilizó ${label} como proveedor alternativo.`;
 }
 
 async function generateSingle(
@@ -304,7 +319,9 @@ async function generateSingle(
       return {
         result,
         notice:
-          hasPhoto && provider.name === "gemini"
+          hasPhoto &&
+          (provider.name === "gemini" ||
+            provider.name === "claude")
             ? "La publicación se generó analizando la fotografía asociada al menú."
             : getProviderNotice(
                 selected,
