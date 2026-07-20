@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import {
+  deleteMedia,
   getMedia,
   uploadMedia,
 } from "../services/media.service";
@@ -66,6 +67,20 @@ export function useMedia() {
       if (data) {
         setMedia(data);
       }
+    },
+    remove: async (item: Media) => {
+      const { error } = await deleteMedia({
+        id: item.id,
+        file_path: item.file_path,
+      });
+
+      if (!error) {
+        setMedia((current) =>
+          current.filter((entry) => entry.id !== item.id)
+        );
+      }
+
+      return { error };
     },
   };
 }
