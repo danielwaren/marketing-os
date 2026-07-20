@@ -1,14 +1,26 @@
+import {
+  CalendarClock,
+  Images,
+  Link2,
+  UtensilsCrossed,
+} from "lucide-react";
+
 import { DashboardHeader } from "./DashboardHeader";
 import { DashboardCard } from "./DashboardCard";
+import { AIUsageCard } from "./AIUsageCard";
+import { ContentSuggestions } from "./ContentSuggestions";
 
 import { useWorkspace } from "@/features/workspace/hooks/useWorkspace";
 import { useMedia } from "@/features/media/hooks/useMedia";
 import { useDailyMenu } from "@/features/menu/hooks/useDailyMenu";
+import { useInstagramConnection } from "@/features/instagram/hooks/useInstagramConnection";
+import { usePosts } from "@/features/posts/hooks/usePosts";
 
 export default function DashboardPage() {
   const {
     workspace,
     loading: workspaceLoading,
+    setAutoPublishStories,
   } = useWorkspace();
 
   const {
@@ -21,10 +33,16 @@ export default function DashboardPage() {
     loading: menuLoading,
   } = useDailyMenu();
 
+  const { status: instagramStatus } =
+    useInstagramConnection(workspace?.id ?? null);
+
+  const { posts, loading: postsLoading } = usePosts();
+
   const loading =
     workspaceLoading ||
     mediaLoading ||
-    menuLoading;
+    menuLoading ||
+    postsLoading;
 
   if (loading) {
     return <p>Cargando dashboard...</p>;
@@ -35,14 +53,24 @@ export default function DashboardPage() {
     return null;
   }
 
+  const publishedCount = posts.filter(
+    (post) => post.status === "published"
+  ).length;
+  const scheduledCount = posts.filter(
+    (post) => post.status === "scheduled"
+  ).length;
+  const instagramConnected =
+    instagramStatus?.connected ?? false;
+
   return (
     <div className="space-y-8">
       <DashboardHeader
         workspaceName={workspace.name}
       />
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <DashboardCard
+          icon={UtensilsCrossed}
           title="Menú de hoy"
           value={menu?.main_course ?? "Sin configurar"}
           description={
@@ -57,6 +85,7 @@ export default function DashboardPage() {
         />
 
         <DashboardCard
+          icon={Images}
           title="Banco de contenido"
           value={`${media.length}`}
           description={
@@ -71,21 +100,60 @@ export default function DashboardPage() {
         />
 
         <DashboardCard
+          icon={Link2}
           title="Instagram"
-          value="Pendiente"
-          description="La conexión con Instagram se implementará en el siguiente módulo."
-          actionLabel="Próximamente"
-          disabled
+          value={
+            instagramConnected
+              ? "Conectado"
+              : "Sin conectar"
+          }
+          description={
+            instagramConnected
+              ? "Puedes publicar directo desde tus publicaciones."
+              : "Conecta tu cuenta para poder publicar."
+          }
+          actionLabel={
+            instagramConnected
+              ? "Ver conexión"
+              : "Conectar ahora"
+          }
+          badge={
+            instagramConnected
+              ? { label: "Activo", variant: "success" }
+              : undefined
+          }
+          onClick={() => {
+            window.location.href = "/app/instagram";
+          }}
         />
 
         <DashboardCard
+          icon={CalendarClock}
           title="Publicaciones"
-          value="0"
-          description="Todavía no hay publicaciones creadas."
-          actionLabel="Próximamente"
-          disabled
+          value={`${posts.length}`}
+          description={
+            scheduledCount > 0
+              ? `${publishedCount} publicadas · ${scheduledCount} programadas`
+              : `${publishedCount} publicadas hasta ahora`
+          }
+          actionLabel="Ver publicaciones"
+          onClick={() => {
+            window.location.href = "/app/posts";
+          }}
         />
       </div>
+
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <AIUsageCard workspaceId={workspace.id} />
+      </div>
+
+      <ContentSuggestions
+        media={media}
+        menu={menu}
+        workspace={workspace}
+        instagramConnected={instagramConnected}
+        onToggleAutoPublish={setAutoPublishStories}
+      />
     </div>
   );
 }

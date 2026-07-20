@@ -12,6 +12,10 @@ const postSelect = `
       file_path,
       file_name
     )
+  ),
+  media:media_id (
+    file_path,
+    file_name
   )
 `;
 
@@ -36,6 +40,7 @@ export async function createPost(
     .insert({
       workspace_id: workspaceId,
       menu_id: post.menu_id,
+      media_id: post.media_id ?? null,
       title: post.title,
       content: post.content,
       platform: post.platform,

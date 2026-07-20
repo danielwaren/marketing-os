@@ -15,7 +15,10 @@ export async function getWorkspace() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("Usuario no autenticado");
+    return {
+      data: null,
+      error: new Error("not_authenticated"),
+    };
   }
 
   return await supabase
@@ -40,4 +43,19 @@ export async function createWorkspace(
     owner_id: user.id,
     ...workspace,
   });
+}
+
+export async function updateAutoPublishStories(
+  workspaceId: string,
+  autoPublishStories: boolean
+) {
+  return await supabase
+    .from("workspaces")
+    .update({
+      auto_publish_stories: autoPublishStories,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", workspaceId)
+    .select("*")
+    .single();
 }

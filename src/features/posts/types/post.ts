@@ -16,6 +16,11 @@ export interface PostMenu {
   media: DailyMenuMedia | null;
 }
 
+export interface PostMedia {
+  file_path: string;
+  file_name: string;
+}
+
 export interface Post {
   id: string;
 
@@ -24,6 +29,10 @@ export interface Post {
   menu_id: string | null;
 
   menu: PostMenu | null;
+
+  media_id: string | null;
+
+  media: PostMedia | null;
 
   title: string;
 
@@ -44,6 +53,8 @@ export interface Post {
 
 export interface CreatePostDto {
   menu_id: string | null;
+
+  media_id?: string | null;
 
   title: string;
 
