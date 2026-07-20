@@ -224,14 +224,56 @@ Engagement
 ## ANA-003 ✅
 Alcance
 
-## ANA-004
+## ANA-004 ✅
 Guardados
 
-## ANA-005
+## ANA-005 ✅
 Clicks
 
-## ANA-006
+## ANA-006 ✅
 Comparativas
+
+MÓDULO ANALYTICS CERRADO
+
+---
+
+# GALERÍA
+
+## GAL-001 ✅
+Conectar Google Photos
+
+Autenticar con Google (OAuth) y permitir elegir fotos mediante el Photos Picker API. Google ya no permite leer la librería completa sin una revisión de seguridad extensa, así que la selección es por sesión (el usuario elige fotos puntuales cada vez, no una sincronización automática de todo el álbum). Verificado de punta a punta con cuenta real de Google.
+
+## GAL-002 ✅
+Guardar fotos seleccionadas en el banco de medios
+
+Importar las fotos elegidas en el Picker hacia el módulo Media existente (Supabase Storage), para que se puedan usar igual que las imágenes subidas manualmente. Verificado de punta a punta con cuenta real de Google.
+
+MÓDULO GALERÍA CERRADO
+
+## GAL-003 ✅
+Sugerir posts con fotos del banco en el dashboard
+
+## GAL-004 ✅
+Sugerir historias con fotos del banco en el dashboard
+
+Sección "Sugerencias de contenido" en el dashboard: surfacea fotos del banco (priorizando las importadas de Google Photos) y propone convertirlas en post (GAL-003) o historia (GAL-004). Cada tarjeta lleva al editor de publicaciones con la sugerencia guardada. Verificado con datos reales.
+
+---
+
+# AUTOMATIZACIÓN DE HISTORIAS
+
+## AUTO-001 ✅
+Generar historias automáticamente con IA
+
+La IA genera el texto de la historia (Claude, con análisis de la foto adjunta) a partir de una foto sugerida del banco de imágenes; el usuario puede editarlo y guardarlo como borrador o publicarlo. Edge Function `generate-story` (mismos proveedores/modelos que `generate-post-text`: Claude→Gemini→Groq→plantilla local). Verificado con datos reales: texto generado por Claude analizando la foto y el contexto del negocio.
+
+## AUTO-002 ✅
+Activar auto-publicación de historias generadas por IA
+
+Toggle "Auto-publicar historias de IA" en el dashboard (columna `workspaces.auto_publish_stories`, apagado por defecto). Cuando está activo, "Generar con IA" genera y publica sin paso de revisión manual, reutilizando el pipeline de publicación ya probado (`instagram-publish`, mediaType "stories"). Cuando está apagado, muestra el texto para editar y botones explícitos "Guardar borrador" / "Publicar ahora". Verificado: generación real y flujo de guardado como borrador end-to-end.
+
+MÓDULO AUTOMATIZACIÓN DE HISTORIAS CERRADO
 
 ---
 
