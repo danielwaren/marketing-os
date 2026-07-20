@@ -3,13 +3,14 @@ import type { Media } from "../types/media";
 
 interface Props {
   media: Media[];
+  onDelete(media: Media): Promise<{ error: Error | null }>;
 }
 
-export function MediaGrid({ media }: Props) {
+export function MediaGrid({ media, onDelete }: Props) {
   if (media.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed p-12 text-center">
-        <h2 className="text-xl font-semibold">
+      <div className="rounded-xl border border-dashed border-border p-12 text-center">
+        <h2 className="text-xl font-semibold text-foreground">
           Tu banco de contenido está vacío
         </h2>
 
@@ -26,6 +27,7 @@ export function MediaGrid({ media }: Props) {
         <MediaCard
           key={item.id}
           media={item}
+          onDelete={onDelete}
         />
       ))}
     </div>

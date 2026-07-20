@@ -9,8 +9,8 @@ import type { Post, PostStatus } from "@/features/posts/types/post";
 
 const statusDotStyles: Record<PostStatus, string> = {
   draft: "bg-muted-foreground/40",
-  scheduled: "bg-amber-500",
-  published: "bg-emerald-500",
+  scheduled: "bg-warning",
+  published: "bg-success",
 };
 
 export default function CalendarPage() {
@@ -82,14 +82,20 @@ export default function CalendarPage() {
         description="Visualiza y reprograma tus publicaciones. Arrastra una publicación programada a otro día para moverla."
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex overflow-hidden rounded-lg border">
+            <div
+              role="radiogroup"
+              aria-label="Vista del calendario"
+              className="inline-flex rounded-lg border border-border bg-muted/50 p-1"
+            >
               <button
                 type="button"
+                role="radio"
+                aria-checked={view === "month"}
                 onClick={() => setView("month")}
-                className={`px-3 py-1.5 text-sm ${
+                className={`cursor-pointer rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                   view === "month"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-background"
+                    ? "bg-card text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Mes
@@ -97,11 +103,13 @@ export default function CalendarPage() {
 
               <button
                 type="button"
+                role="radio"
+                aria-checked={view === "week"}
                 onClick={() => setView("week")}
-                className={`px-3 py-1.5 text-sm ${
+                className={`cursor-pointer rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                   view === "week"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-background"
+                    ? "bg-card text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Semana
@@ -254,12 +262,12 @@ export default function CalendarPage() {
 
       <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+          <span className="h-1.5 w-1.5 rounded-full bg-warning" />
           Programada
         </span>
 
         <span className="flex items-center gap-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          <span className="h-1.5 w-1.5 rounded-full bg-success" />
           Publicada
         </span>
       </div>

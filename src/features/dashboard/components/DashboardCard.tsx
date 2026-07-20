@@ -1,44 +1,75 @@
+import type { LucideIcon } from "lucide-react";
+
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+
 interface DashboardCardProps {
+  icon: LucideIcon;
   title: string;
   value: string;
   description: string;
   actionLabel: string;
   onClick?: () => void;
   disabled?: boolean;
+  badge?: { label: string; variant: "success" | "warning" };
 }
 
 export function DashboardCard({
+  icon: Icon,
   title,
   value,
   description,
   actionLabel,
   onClick,
   disabled = false,
+  badge,
 }: DashboardCardProps) {
   return (
-    <article className="flex min-h-56 flex-col justify-between rounded-xl border bg-card p-6">
-      <div>
-        <h2 className="text-base font-medium text-muted-foreground">
-          {title}
-        </h2>
+    <Card className="flex min-h-56 flex-col justify-between">
+      <CardContent className="flex flex-1 flex-col justify-between gap-4">
+        <div>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Icon
+                className="size-5"
+                strokeWidth={1.75}
+              />
+            </div>
 
-        <p className="mt-4 text-3xl font-semibold tracking-tight">
-          {value}
-        </p>
+            {badge && (
+              <Badge variant={badge.variant}>
+                {badge.label}
+              </Badge>
+            )}
+          </div>
 
-        <p className="mt-3 text-sm text-muted-foreground">
-          {description}
-        </p>
-      </div>
+          <h2 className="mt-3.5 text-sm font-medium text-muted-foreground">
+            {title}
+          </h2>
 
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={onClick}
-        className="mt-6 w-fit rounded-md border px-4 py-2 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {actionLabel}
-      </button>
-    </article>
+          <p className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
+            {value}
+          </p>
+
+          <p className="mt-2 text-sm text-muted-foreground">
+            {description}
+          </p>
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={disabled}
+          onClick={onClick}
+          className="w-fit"
+        >
+          {actionLabel}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

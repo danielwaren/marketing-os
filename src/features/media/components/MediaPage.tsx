@@ -7,24 +7,19 @@ import { useMedia } from "../hooks/useMedia";
 import { MediaUploader } from "./MediaUploader";
 
 export default function MediaPage() {
-  const { media, loading, upload } = useMedia();
+  const { media, loading, upload, remove } = useMedia();
 
   async function handleUpload(file: File) {
     const result = await upload(file);
 
     if (result?.error) {
       alert(result.error.message);
-      return;
     }
-
-    alert("Archivo subido correctamente");
   }
 
   if (loading) {
     return <p>Cargando banco de contenido...</p>;
   }
-
-  const uploader = <MediaUploader onSelect={handleUpload} />;
 
   return (
     <div className="space-y-8">
@@ -35,7 +30,11 @@ export default function MediaPage() {
             ? "Todavía no has subido imágenes ni videos."
             : `${media.length} archivo${media.length === 1 ? "" : "s"} disponible${media.length === 1 ? "" : "s"}`
         }
-        actions={uploader}
+        actions={
+          media.length > 0 && (
+            <MediaUploader onSelect={handleUpload} />
+          )
+        }
       />
 
       {media.length === 0 ? (
@@ -45,7 +44,10 @@ export default function MediaPage() {
           action={<MediaUploader onSelect={handleUpload} />}
         />
       ) : (
-        <MediaGrid media={media} />
+        <MediaGrid
+          media={media}
+          onDelete={remove}
+        />
       )}
     </div>
   );

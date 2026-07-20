@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -36,6 +36,11 @@ import type { PostSchema } from "../schemas/post.schema";
 import type {
   GeneratePostInput,
 } from "@/features/ai/types/ai";
+import {
+  clearStashedSuggestion,
+  readStashedSuggestion,
+} from "@/features/dashboard/services/suggestions.service";
+import type { SuggestionFormat } from "@/features/dashboard/services/suggestions.service";
 
 const platformLabels: Record<Post["platform"], string> = {
   instagram: "Instagram",
@@ -51,8 +56,8 @@ const statusLabels: Record<PostStatus, string> = {
 
 const statusStyles: Record<PostStatus, string> = {
   draft: "bg-muted text-muted-foreground",
-  scheduled: "bg-amber-500/10 text-amber-700",
-  published: "bg-emerald-500/10 text-emerald-700",
+  scheduled: "bg-warning/20 text-warning-foreground",
+  published: "bg-success/15 text-success",
 };
 
 type PostFilter = "all" | PostStatus;
@@ -128,6 +133,21 @@ export default function PostsPage() {
   const [searchQuery, setSearchQuery] =
     useState("");
 
+  const [suggestedFormat, setSuggestedFormat] =
+    useState<SuggestionFormat | null>(null);
+
+  // Al llegar desde una sugerencia del dashboard, abre el editor
+  // directamente y recuerda si se pidió un post o una historia.
+  useEffect(() => {
+    const stashed = readStashedSuggestion();
+
+    if (stashed) {
+      setSuggestedFormat(stashed.format);
+      setCreating(true);
+      clearStashedSuggestion();
+    }
+  }, []);
+
   if (loading) {
     return <p>Cargando...</p>;
   }
@@ -137,6 +157,7 @@ export default function PostsPage() {
 
     if (!result?.error) {
       setCreating(false);
+      setSuggestedFormat(null);
     }
   }
 
@@ -410,6 +431,14 @@ export default function PostsPage() {
         }
       />
 
+      {creating && suggestedFormat && (
+        <div className="rounded-lg border border-warning/40 bg-warning/15 px-4 py-3 text-sm text-warning-foreground">
+          {suggestedFormat === "story"
+            ? "Estás creando una historia sugerida desde el banco de contenido. Recuerda adjuntar la foto sugerida al menú de hoy para publicarla."
+            : "Estás creando un post sugerido desde el banco de contenido. Recuerda adjuntar la foto sugerida al menú de hoy para publicarlo."}
+        </div>
+      )}
+
       {creating && (
         <PostForm
           initialValues={initialValues}
@@ -560,7 +589,7 @@ export default function PostsPage() {
                           Se publicará automáticamente en Instagram a esa hora.
                         </span>
                       ) : (
-                        <span className="text-xs text-amber-700">
+                        <span className="text-xs text-warning-foreground">
                           Conecta Instagram y agrega una foto para la publicación automática.
                         </span>
                       )}
@@ -786,7 +815,7 @@ export default function PostsPage() {
                     <p
                       className={`w-full text-sm ${
                         publishFeedback.type === "success"
-                          ? "text-emerald-700"
+                          ? "text-success"
                           : "text-destructive"
                       }`}
                     >

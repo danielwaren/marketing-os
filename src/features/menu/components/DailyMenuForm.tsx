@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 
 import {
   dailyMenuSchema,
@@ -19,6 +20,31 @@ interface Props {
   onSelectPhoto(): void;
   onCancel?: () => void;
 }
+
+const FIELDS: Array<{
+  name: keyof Pick<
+    DailyMenuSchema,
+    "starter" | "main_course" | "dessert"
+  >;
+  label: string;
+  placeholder: string;
+}> = [
+  {
+    name: "starter",
+    label: "Entrada",
+    placeholder: "Ej: Sopa de verduras",
+  },
+  {
+    name: "main_course",
+    label: "Plato principal",
+    placeholder: "Ej: Cazuela de vacuno",
+  },
+  {
+    name: "dessert",
+    label: "Postre",
+    placeholder: "Ej: Leche asada",
+  },
+];
 
 export function DailyMenuForm({
   onSubmit,
@@ -43,85 +69,70 @@ export function DailyMenuForm({
   });
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-6 rounded-xl border p-6"
-    >
-      <div>
-        <label className="mb-2 block text-sm font-medium">
-          Entrada
-        </label>
-
-        <Input
-          placeholder="Ej: Sopa de verduras"
-          {...register("starter")}
-        />
-
-        {errors.starter && (
-          <p className="mt-1 text-sm text-red-500">
-            {errors.starter.message}
-          </p>
-        )}
-      </div>
-
-      <div>
-        <label className="mb-2 block text-sm font-medium">
-          Plato principal
-        </label>
-
-        <Input
-          placeholder="Ej: Cazuela de vacuno"
-          {...register("main_course")}
-        />
-
-        {errors.main_course && (
-          <p className="mt-1 text-sm text-red-500">
-            {errors.main_course.message}
-          </p>
-        )}
-      </div>
-
-      <div>
-        <label className="mb-2 block text-sm font-medium">
-          Postre
-        </label>
-
-        <Input
-          placeholder="Ej: Leche asada"
-          {...register("dessert")}
-        />
-
-        {errors.dessert && (
-          <p className="mt-1 text-sm text-red-500">
-            {errors.dessert.message}
-          </p>
-        )}
-      </div>
-
-      <PhotoPickerButton
-        fileName={selectedPhotoName}
-        onClick={onSelectPhoto}
-      />
-
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        {onCancel && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={isSubmitting}
-          >
-            Cancelar
-          </Button>
-        )}
-
-        <Button
-          type="submit"
-          disabled={isSubmitting}
+    <Card>
+      <CardContent>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-5"
         >
-          {isSubmitting ? "Guardando..." : submitLabel}
-        </Button>
-      </div>
-    </form>
+          {FIELDS.map((field) => (
+            <div key={field.name}>
+              <label
+                htmlFor={field.name}
+                className="mb-1.5 block text-sm font-medium text-foreground"
+              >
+                {field.label}
+                <span
+                  className="ml-0.5 text-destructive"
+                  aria-hidden="true"
+                >
+                  *
+                </span>
+              </label>
+
+              <Input
+                id={field.name}
+                placeholder={field.placeholder}
+                aria-invalid={
+                  Boolean(errors[field.name]) || undefined
+                }
+                {...register(field.name)}
+              />
+
+              {errors[field.name] && (
+                <p className="mt-1.5 text-sm text-destructive">
+                  {errors[field.name]?.message}
+                </p>
+              )}
+            </div>
+          ))}
+
+          <PhotoPickerButton
+            fileName={selectedPhotoName}
+            onClick={onSelectPhoto}
+          />
+
+          <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
+            {onCancel && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+            )}
+
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Guardando..." : submitLabel}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

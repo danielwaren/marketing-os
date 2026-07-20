@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -29,7 +30,10 @@ export function WorkspaceForm() {
   });
 
   async function onSubmit(data: WorkspaceSchema) {
-    const { error } = await createWorkspace(data);
+    const { error } = await createWorkspace({
+      ...data,
+      instagram_username: data.instagram_username ?? "",
+    });
 
     if (error) {
       alert(error.message);
@@ -45,58 +49,101 @@ export function WorkspaceForm() {
       className="space-y-5"
     >
       <div>
+        <label
+          htmlFor="workspace-name"
+          className="mb-1.5 block text-sm font-medium text-foreground"
+        >
+          Nombre del negocio
+        </label>
+
         <Input
-          placeholder="Nombre del negocio"
+          id="workspace-name"
           {...register("name")}
         />
-        <p className="text-sm text-red-500">{errors.name?.message}</p>
+
+        {errors.name && (
+          <p className="mt-1.5 text-sm text-destructive">
+            {errors.name.message}
+          </p>
+        )}
       </div>
 
       <div>
+        <label
+          htmlFor="workspace-business-type"
+          className="mb-1.5 block text-sm font-medium text-foreground"
+        >
+          Tipo de negocio
+        </label>
+
         <Input
-          placeholder="Tipo de negocio"
+          id="workspace-business-type"
           {...register("business_type")}
         />
       </div>
 
       <div>
+        <label
+          htmlFor="workspace-city"
+          className="mb-1.5 block text-sm font-medium text-foreground"
+        >
+          Ciudad
+        </label>
+
         <Input
-          placeholder="Ciudad"
+          id="workspace-city"
           {...register("city")}
         />
       </div>
 
       <div>
+        <label
+          htmlFor="workspace-instagram"
+          className="mb-1.5 block text-sm font-medium text-foreground"
+        >
+          Usuario de Instagram
+        </label>
+
         <Input
-          placeholder="Instagram"
+          id="workspace-instagram"
           {...register("instagram_username")}
         />
       </div>
 
       <div>
-        <label>Contenido principal</label>
+        <label
+          htmlFor="workspace-content-focus"
+          className="mb-1.5 block text-sm font-medium text-foreground"
+        >
+          Contenido principal
+        </label>
 
-        <select
+        <Select
+          id="workspace-content-focus"
           {...register("content_focus")}
-          className="w-full rounded-md border p-2"
         >
           <option value="menu">Menú diario</option>
           <option value="pizza">Pizzas</option>
           <option value="both">Ambos</option>
-        </select>
+        </Select>
       </div>
 
       <div>
-        <label>Objetivo</label>
+        <label
+          htmlFor="workspace-goal"
+          className="mb-1.5 block text-sm font-medium text-foreground"
+        >
+          Objetivo
+        </label>
 
-        <select
+        <Select
+          id="workspace-goal"
           {...register("goal")}
-          className="w-full rounded-md border p-2"
         >
           <option value="sales">Ventas</option>
           <option value="followers">Seguidores</option>
           <option value="both">Ambos</option>
-        </select>
+        </Select>
       </div>
 
       <Button
@@ -104,7 +151,7 @@ export function WorkspaceForm() {
         className="w-full"
         disabled={isSubmitting}
       >
-        Configurar negocio
+        {isSubmitting ? "Guardando..." : "Configurar negocio"}
       </Button>
     </form>
   );

@@ -18,17 +18,15 @@ export function LoginForm() {
   });
 
   async function onSubmit(data: LoginSchema) {
-    console.log("onSubmit", data);
-    
     const { error } = await signIn(data.email, data.password);
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  window.location.href = "/app";
+    if (error) {
+      alert(error.message);
+      return;
     }
+
+    window.location.href = "/app";
+  }
 
   return (
     <form
@@ -36,40 +34,58 @@ export function LoginForm() {
       className="space-y-5"
     >
       <div>
+        <label
+          htmlFor="login-email"
+          className="mb-1.5 block text-sm font-medium text-foreground"
+        >
+          Correo electrónico
+        </label>
+
         <Input
+          id="login-email"
           type="email"
-          placeholder="Correo electrónico"
+          autoComplete="email"
+          aria-invalid={Boolean(errors.email) || undefined}
           {...register("email")}
         />
 
         {errors.email && (
-          <p className="mt-2 text-sm text-red-500">
+          <p className="mt-1.5 text-sm text-destructive">
             {errors.email.message}
           </p>
         )}
       </div>
 
       <div>
+        <label
+          htmlFor="login-password"
+          className="mb-1.5 block text-sm font-medium text-foreground"
+        >
+          Contraseña
+        </label>
+
         <Input
+          id="login-password"
           type="password"
-          placeholder="Contraseña"
+          autoComplete="current-password"
+          aria-invalid={Boolean(errors.password) || undefined}
           {...register("password")}
         />
 
         {errors.password && (
-          <p className="mt-2 text-sm text-red-500">
+          <p className="mt-1.5 text-sm text-destructive">
             {errors.password.message}
           </p>
         )}
       </div>
 
       <Button
-  type="submit"
-  className="w-full"
-  disabled={isSubmitting}
->
-  {isSubmitting ? "Ingresando..." : "Ingresar"}
-</Button>
+        type="submit"
+        className="w-full"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? "Ingresando..." : "Ingresar"}
+      </Button>
     </form>
   );
 }

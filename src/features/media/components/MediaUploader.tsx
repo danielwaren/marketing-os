@@ -1,11 +1,29 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
+
+import { Button } from "@/components/ui/button";
 
 interface Props {
-  onSelect(file: File): void;
+  onSelect(file: File): Promise<void> | void;
 }
 
 export function MediaUploader({ onSelect }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleChange(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    setUploading(true);
+
+    await onSelect(file);
+
+    setUploading(false);
+    event.target.value = "";
+  }
 
   return (
     <>
@@ -14,21 +32,15 @@ export function MediaUploader({ onSelect }: Props) {
         hidden
         type="file"
         accept="image/*,video/*"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-
-          if (file) {
-            onSelect(file);
-          }
-        }}
+        onChange={handleChange}
       />
 
-      <button
+      <Button
+        disabled={uploading}
         onClick={() => inputRef.current?.click()}
-        className="rounded-md border px-4 py-2"
       >
-        Subir contenido
-      </button>
+        {uploading ? "Subiendo..." : "Subir contenido"}
+      </Button>
     </>
   );
 }

@@ -14,10 +14,16 @@ Instagram es un módulo del sistema, no el producto.
 - React
 - TypeScript
 - Tailwind CSS
-- Shadcn UI
 - Supabase
 - OpenAI
 - Vercel
+
+Los primitivos de UI viven en `src/components/ui` (Button, Input, Card, Alert,
+Textarea, Select, Badge). Ya no siguen la paleta gris por defecto de shadcn:
+usan una paleta cálida propia definida como tokens CSS en `src/styles/global.css`
+(terracota como color primario, verde pino como acento). Nada de
+glassmorphism (blur/transparencia decorativa) y la fuente es Geist, no Inter.
+No reintroducir la estética gris/fría al tocar estos archivos.
 
 ---
 

@@ -13,7 +13,7 @@ export function AppShell({
   children,
 }: Props) {
   return (
-    <div className="flex min-h-screen bg-zinc-50">
+    <div className="flex min-h-screen bg-background">
       <Sidebar />
 
       <div className="flex flex-1 flex-col">

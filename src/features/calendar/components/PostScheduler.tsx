@@ -98,7 +98,7 @@ export function PostScheduler({
         onChange={(event) =>
           setValue(event.target.value)
         }
-        className="h-8 rounded-lg border bg-background px-2.5 text-sm"
+        className="h-9 rounded-lg border border-input bg-card px-2.5 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25 disabled:opacity-60"
       />
 
       <Button

@@ -10,7 +10,7 @@ import { AppShell } from "@/app/layouts/AppShell";
 ---
 
 <AppLayout title={title}>
-  <AppShell title={title}>
+  <AppShell title={title} client:load>
     <slot />
   </AppShell>
 </AppLayout>

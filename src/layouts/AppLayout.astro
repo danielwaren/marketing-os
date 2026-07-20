@@ -12,6 +12,25 @@ import "@/styles/global.css";
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <title>{title}</title>
+    <script is:inline>
+      // Se aplica antes del primer paint para evitar el flash del tema
+      // incorrecto (FOUC). Prioridad: preferencia guardada > sistema.
+      (function () {
+        try {
+          const stored = localStorage.getItem("theme");
+          const isDark =
+            stored === "dark" ||
+            (stored !== "light" &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+          if (isDark) {
+            document.documentElement.classList.add("dark");
+          }
+        } catch (_error) {
+          // Si localStorage no está disponible, se queda en claro.
+        }
+      })();
+    </script>
   </head>
   <body class="min-h-screen bg-background text-foreground">
     <slot />

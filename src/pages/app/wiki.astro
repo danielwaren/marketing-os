@@ -1,0 +1,203 @@
+---
+import AppLayout from "@/layouts/DashboardLayout.astro";
+
+const sections = [
+  { id: "resumen", label: "Qué es Marketing OS" },
+  { id: "flujo-diario", label: "El flujo diario" },
+  { id: "menu", label: "Menú del día" },
+  { id: "banco", label: "Banco de contenido" },
+  { id: "galeria", label: "Galería (Google Photos)" },
+  { id: "publicaciones", label: "Publicaciones e IA" },
+  { id: "sugerencias", label: "Sugerencias e historias automáticas" },
+  { id: "calendario", label: "Calendario y auto-publicación" },
+  { id: "instagram", label: "Conexión con Instagram" },
+  { id: "estadisticas", label: "Estadísticas" },
+  { id: "en-desarrollo", label: "En desarrollo" },
+];
+---
+
+<AppLayout title="Wiki">
+  <div class="grid gap-8 lg:grid-cols-[220px_1fr]">
+    <nav class="hidden lg:block">
+      <div class="sticky top-8 space-y-1 rounded-xl border border-border bg-card p-4 text-sm">
+        <p class="mb-2 px-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          En esta página
+        </p>
+
+        {
+          sections.map((section) => (
+            <a
+              href={`#${section.id}`}
+              class="block rounded-md px-2.5 py-1.5 text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              {section.label}
+            </a>
+          ))
+        }
+      </div>
+    </nav>
+
+    <div class="max-w-3xl space-y-10">
+      <section id="resumen" class="space-y-3">
+        <h2 class="font-heading text-xl font-semibold tracking-tight">
+          Qué es Marketing OS
+        </h2>
+        <p class="leading-relaxed text-foreground/90">
+          Marketing OS es el sistema que administra el contenido y las
+          publicaciones de tu negocio en Instagram, pensado para que no
+          tengas que sentarte a escribir textos ni editar fotos todos los
+          días. El menú del día es el corazón del sistema: a partir de él
+          se generan publicaciones, historias y estadísticas.
+        </p>
+      </section>
+
+      <section id="flujo-diario" class="space-y-3">
+        <h2 class="font-heading text-xl font-semibold tracking-tight">
+          El flujo diario
+        </h2>
+        <ol class="list-decimal space-y-2 pl-5 leading-relaxed text-foreground/90">
+          <li>Creas el <strong>menú del día</strong> (entrada, plato principal, postre) y le asocias una foto.</li>
+          <li>Vas a <strong>Publicaciones</strong> y presionas «Generar con IA»: el sistema arma un texto usando el menú, el clima del día y, si hay foto, la analiza para describirla.</li>
+          <li>Revisas o editas el texto, y lo guardas como borrador.</li>
+          <li>Publicas directo en Instagram, o lo <strong>programas</strong> desde el Calendario para que se publique solo a una hora futura.</li>
+          <li>Revisas cómo le fue en <strong>Estadísticas</strong> (alcance, interacciones, comparación contra el período anterior).</li>
+        </ol>
+      </section>
+
+      <section id="menu" class="space-y-3">
+        <h2 class="font-heading text-xl font-semibold tracking-tight">
+          Menú del día
+        </h2>
+        <p class="leading-relaxed text-foreground/90">
+          En <code class="rounded bg-muted px-1.5 py-0.5 text-sm">/app/menu</code>
+          registras el menú de cada día (entrada, plato principal, postre) y
+          eliges una foto del banco de contenido para acompañarlo. Este
+          menú es la fuente principal de datos reales que usa la IA — nunca
+          inventa platos ni precios, siempre usa lo que escribiste aquí.
+        </p>
+      </section>
+
+      <section id="banco" class="space-y-3">
+        <h2 class="font-heading text-xl font-semibold tracking-tight">
+          Banco de contenido
+        </h2>
+        <p class="leading-relaxed text-foreground/90">
+          En <code class="rounded bg-muted px-1.5 py-0.5 text-sm">/app/media</code>
+          subes y administras las fotos y videos que usas en tus
+          publicaciones. Cualquier foto que subas aquí (o que importes
+          desde Google Photos) queda disponible para asociarla al menú del
+          día o para que la IA la sugiera en una historia.
+        </p>
+      </section>
+
+      <section id="galeria" class="space-y-3">
+        <h2 class="font-heading text-xl font-semibold tracking-tight">
+          Galería (Google Photos)
+        </h2>
+        <p class="leading-relaxed text-foreground/90">
+          En <code class="rounded bg-muted px-1.5 py-0.5 text-sm">/app/gallery</code>
+          conectas tu cuenta de Google Photos una sola vez. Después puedes
+          elegir fotos puntuales desde tu galería del celular o computador
+          (no se sincroniza todo tu álbum, solo lo que elijas cada vez) y
+          se copian automáticamente al banco de contenido, marcadas como
+          «importadas de Google Photos» para que el sistema las priorice en
+          las sugerencias.
+        </p>
+      </section>
+
+      <section id="publicaciones" class="space-y-3">
+        <h2 class="font-heading text-xl font-semibold tracking-tight">
+          Publicaciones e IA
+        </h2>
+        <p class="leading-relaxed text-foreground/90">
+          En <code class="rounded bg-muted px-1.5 py-0.5 text-sm">/app/posts</code>
+          creas y administras tus publicaciones. La IA (Claude, con Gemini
+          y Groq como respaldo si Claude no está disponible) puede generar
+          el texto completo, una versión corta, una versión larga, tres
+          variantes distintas para elegir, reescribir el texto existente, o
+          solo agregar hashtags o emojis sin tocar el resto. Cuando hay una
+          foto asociada al menú, la IA la analiza para describirla con más
+          precisión.
+        </p>
+        <p class="leading-relaxed text-foreground/90">
+          Desde cada publicación puedes publicar directo en el feed de
+          Instagram, publicarla como historia, o armar un carrusel de hasta
+          10 fotos — todo sin salir de la app.
+        </p>
+      </section>
+
+      <section id="sugerencias" class="space-y-3">
+        <h2 class="font-heading text-xl font-semibold tracking-tight">
+          Sugerencias e historias automáticas
+        </h2>
+        <p class="leading-relaxed text-foreground/90">
+          El Dashboard muestra sugerencias de contenido a partir de las
+          fotos de tu banco (priorizando las recién importadas de Google
+          Photos). Para las historias, la IA además elige el
+          <strong> tipo de historia</strong> según la hora del día:
+        </p>
+        <ul class="list-disc space-y-1 pl-5 leading-relaxed text-foreground/90">
+          <li><strong>11:00–15:00</strong>, si hay menú creado: historia de almuerzo, invitando al menú del día.</li>
+          <li><strong>17:00–21:00</strong>: historia de pizzas artesanales (no necesita menú ni una foto específica de pizza).</li>
+          <li>Si está lloviendo o hace frío, la IA lo menciona y lo combina con la sugerencia de pizza o menú caliente.</li>
+        </ul>
+        <p class="leading-relaxed text-foreground/90">
+          Con el interruptor <strong>«Auto-publicar historias de IA»</strong>
+          activo, la historia se genera y se publica sola, sin que tengas
+          que revisarla. Apagado (por defecto), la IA te muestra el texto
+          para editar antes de guardar como borrador o publicar.
+        </p>
+      </section>
+
+      <section id="calendario" class="space-y-3">
+        <h2 class="font-heading text-xl font-semibold tracking-tight">
+          Calendario y auto-publicación
+        </h2>
+        <p class="leading-relaxed text-foreground/90">
+          En <code class="rounded bg-muted px-1.5 py-0.5 text-sm">/app/calendar</code>
+          programas publicaciones para que salgan solas a una hora futura.
+          Un proceso automático revisa cada minuto si hay publicaciones
+          programadas listas y las publica en Instagram sin que tengas que
+          estar conectado en ese momento.
+        </p>
+      </section>
+
+      <section id="instagram" class="space-y-3">
+        <h2 class="font-heading text-xl font-semibold tracking-tight">
+          Conexión con Instagram
+        </h2>
+        <p class="leading-relaxed text-foreground/90">
+          En <code class="rounded bg-muted px-1.5 py-0.5 text-sm">/app/instagram</code>
+          conectas tu cuenta de Instagram (requiere una cuenta profesional).
+          Una vez conectada, el resto de la app puede publicar en tu
+          nombre — feed, historias y carruseles.
+        </p>
+      </section>
+
+      <section id="estadisticas" class="space-y-3">
+        <h2 class="font-heading text-xl font-semibold tracking-tight">
+          Estadísticas
+        </h2>
+        <p class="leading-relaxed text-foreground/90">
+          En <code class="rounded bg-muted px-1.5 py-0.5 text-sm">/app/analytics</code>
+          revisas alcance, visitas al perfil, clics en tus enlaces,
+          interacciones (me gusta, comentarios, compartidos, guardados) y
+          de qué tipo de audiencia vienen (seguidores o no). Cada número se
+          compara contra los 30 días anteriores para que sepas si vas
+          mejorando.
+        </p>
+      </section>
+
+      <section id="en-desarrollo" class="space-y-3">
+        <h2 class="font-heading text-xl font-semibold tracking-tight">
+          En desarrollo
+        </h2>
+        <p class="leading-relaxed text-foreground/90">
+          «Configuración» todavía no está construido. El carrusel semanal
+          de preparaciones (elegido automáticamente por fecha) está
+          planeado pero no implementado aún.
+        </p>
+      </section>
+    </div>
+  </div>
+</AppLayout>

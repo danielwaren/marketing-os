@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select } from "@/components/ui/select";
 import {
   Alert,
   AlertDescription,
@@ -45,6 +48,17 @@ interface Props {
   mode?: "create" | "edit";
   onSubmit(data: PostSchema): Promise<void>;
 }
+
+type PostLength = "short" | "standard" | "long";
+
+const LENGTH_OPTIONS: Array<{
+  value: PostLength;
+  label: string;
+}> = [
+  { value: "short", label: "Corto" },
+  { value: "standard", label: "Estándar" },
+  { value: "long", label: "Largo" },
+];
 
 export function PostForm({
   initialValues,
@@ -88,6 +102,8 @@ export function PostForm({
     useState<AIPostTone>("casual");
   const [promptId, setPromptId] =
     useState<AIPostPromptId>("daily-menu");
+  const [length, setLength] =
+    useState<PostLength>("standard");
   const content = watch("content");
   const hasGeneratedContent =
     content.trim().length >= 10;
@@ -119,20 +135,29 @@ export function PostForm({
     };
   }
 
-  async function handleGenerate() {
+  function applyGeneratedText(text: string) {
+    setValue("content", text, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }
+
+  async function handleGenerateByLength() {
     const input = await getGenerationInput();
 
     if (!input) {
       return;
     }
 
-    const result = await generate(input);
+    const result =
+      length === "short"
+        ? await generateShort(input)
+        : length === "long"
+          ? await generateLong(input)
+          : await generate(input);
 
     if (result.data) {
-      setValue("content", result.data.text, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
+      applyGeneratedText(result.data.text);
     }
   }
 
@@ -145,44 +170,7 @@ export function PostForm({
 
     const result = await useTemplate(input);
 
-    setValue("content", result.text, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
-  }
-
-  async function handleGenerateShort() {
-    const input = await getGenerationInput();
-
-    if (!input) {
-      return;
-    }
-
-    const result = await generateShort(input);
-
-    if (result.data) {
-      setValue("content", result.data.text, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    }
-  }
-
-  async function handleGenerateLong() {
-    const input = await getGenerationInput();
-
-    if (!input) {
-      return;
-    }
-
-    const result = await generateLong(input);
-
-    if (result.data) {
-      setValue("content", result.data.text, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    }
+    applyGeneratedText(result.text);
   }
 
   async function handleRewrite() {
@@ -199,10 +187,7 @@ export function PostForm({
     );
 
     if (result.data) {
-      setValue("content", result.data.text, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
+      applyGeneratedText(result.data.text);
     }
   }
 
@@ -220,10 +205,7 @@ export function PostForm({
     );
 
     if (result.data) {
-      setValue("content", result.data.text, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
+      applyGeneratedText(result.data.text);
     }
   }
 
@@ -238,10 +220,7 @@ export function PostForm({
   }
 
   function handleUseVersion(text: string) {
-    setValue("content", text, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
+    applyGeneratedText(text);
     clearVersions();
   }
 
@@ -259,439 +238,475 @@ export function PostForm({
     );
 
     if (result.data) {
-      setValue("content", result.data.text, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
+      applyGeneratedText(result.data.text);
     }
   }
 
+  const isGeneratingLength =
+    generating &&
+    (operation === "generate" ||
+      operation === "short" ||
+      operation === "long");
+
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-6 rounded-xl border p-6"
-    >
-      {mode === "edit" ? (
-        <div>
-          <label className="mb-2 block text-sm font-medium">
-            Título
-          </label>
+    <Card>
+      <CardContent>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-6"
+        >
+          {mode === "edit" ? (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
+                Título
+              </label>
 
-          <Input
-            {...register("title")}
-          />
-        </div>
-      ) : (
-        <input
-          type="hidden"
-          {...register("title")}
-        />
-      )}
+              <Input
+                {...register("title")}
+              />
+            </div>
+          ) : (
+            <input
+              type="hidden"
+              {...register("title")}
+            />
+          )}
 
-      {generationContext && (
-        <div className="space-y-4 rounded-xl border bg-muted/30 p-5">
+          {generationContext && (
+            <div className="space-y-4 rounded-xl border border-border bg-muted/40 p-5">
+              <div>
+                <p className="font-medium text-foreground">
+                  Almuerzo de hoy
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Estos datos se utilizarán automáticamente.
+                </p>
+              </div>
+
+              <dl className="grid gap-4 sm:grid-cols-3">
+                <div>
+                  <dt className="text-sm text-muted-foreground">
+                    Entrada
+                  </dt>
+                  <dd className="font-medium text-foreground">
+                    {generationContext.menu.starter}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt className="text-sm text-muted-foreground">
+                    Plato principal
+                  </dt>
+                  <dd className="font-medium text-foreground">
+                    {generationContext.menu.main_course}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt className="text-sm text-muted-foreground">
+                    Postre
+                  </dt>
+                  <dd className="font-medium text-foreground">
+                    {generationContext.menu.dessert}
+                  </dd>
+                </div>
+              </dl>
+
+              <p className="text-sm font-medium text-foreground">
+                Incluye jugo y pan amasado hecho en el local.
+              </p>
+
+              {generationContext.photoPath && (
+                <p className="text-sm text-muted-foreground">
+                  La fotografía asociada se analizará automáticamente al generar el texto.
+                </p>
+              )}
+            </div>
+          )}
+
+          {generationContext && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="post-prompt"
+                  className="mb-1.5 block text-sm font-medium text-foreground"
+                >
+                  Enfoque de la publicación
+                </label>
+
+                <Select
+                  id="post-prompt"
+                  value={promptId}
+                  onChange={(event) =>
+                    setPromptId(
+                      event.target.value as AIPostPromptId
+                    )
+                  }
+                  disabled={generating}
+                >
+                  {REUSABLE_POST_PROMPTS.map((prompt) => (
+                    <option
+                      key={prompt.id}
+                      value={prompt.id}
+                    >
+                      {prompt.label}
+                    </option>
+                  ))}
+                </Select>
+
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  {
+                    REUSABLE_POST_PROMPTS.find(
+                      (prompt) => prompt.id === promptId
+                    )?.description
+                  }
+                </p>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="post-tone"
+                  className="mb-1.5 block text-sm font-medium text-foreground"
+                >
+                  Tono de la publicación
+                </label>
+
+                <Select
+                  id="post-tone"
+                  value={tone}
+                  onChange={(event) =>
+                    setTone(event.target.value as AIPostTone)
+                  }
+                  disabled={generating}
+                >
+                  <option value="casual">Cercano</option>
+                  <option value="formal">Formal</option>
+                  <option value="promotional">Promocional</option>
+                </Select>
+              </div>
+            </div>
+          )}
+
           <div>
-            <p className="font-medium">
-              Almuerzo de hoy
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Estos datos se utilizarán automáticamente.
-            </p>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Publicación
+            </label>
+
+            {(mode === "edit" || hasGeneratedContent) ? (
+              <Textarea
+                {...register("content")}
+                rows={12}
+              />
+            ) : (
+              <div className="rounded-xl border border-dashed border-border bg-muted/30 p-6 text-center">
+                <Sparkles
+                  className="mx-auto mb-2 size-6 text-primary"
+                  strokeWidth={1.75}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Elige la extensión y presiona «Generar con
+                  IA» para crear el texto automáticamente.
+                </p>
+              </div>
+            )}
+
+            {!hasGeneratedContent && (
+              <div className="mt-4 space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div
+                    role="radiogroup"
+                    aria-label="Extensión de la publicación"
+                    className="inline-flex rounded-lg border border-border bg-muted/50 p-1"
+                  >
+                    {LENGTH_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={length === option.value}
+                        disabled={
+                          generating || !generationContext
+                        }
+                        onClick={() => setLength(option.value)}
+                        className={`cursor-pointer rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                          length === option.value
+                            ? "bg-card text-foreground shadow-xs"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <Button
+                    type="button"
+                    disabled={
+                      generating || !generationContext
+                    }
+                    onClick={handleGenerateByLength}
+                  >
+                    <Sparkles />
+                    {isGeneratingLength
+                      ? "Generando..."
+                      : "Generar con IA"}
+                  </Button>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={
+                      generating || !generationContext
+                    }
+                    onClick={handleGenerateVersions}
+                  >
+                    {generating && operation === "versions"
+                      ? "Generando versiones..."
+                      : "Generar 3 versiones"}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={
+                      generating || !generationContext
+                    }
+                    onClick={handleUseTemplate}
+                  >
+                    Usar plantilla local
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {hasGeneratedContent && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={
+                    generating || !generationContext
+                  }
+                  onClick={handleRewrite}
+                >
+                  {generating && operation === "rewrite"
+                    ? "Reescribiendo..."
+                    : "Reescribir con IA"}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={
+                    generating || !generationContext
+                  }
+                  onClick={handleAddHashtags}
+                >
+                  {generating && operation === "hashtags"
+                    ? "Agregando hashtags..."
+                    : "Agregar hashtags"}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={
+                    generating || !generationContext
+                  }
+                  onClick={handleAddEmojis}
+                >
+                  {generating && operation === "emojis"
+                    ? "Agregando emojis..."
+                    : "Agregar emojis"}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={
+                    generating || !generationContext
+                  }
+                  onClick={handleGenerateVersions}
+                >
+                  {generating && operation === "versions"
+                    ? "Generando versiones..."
+                    : "Generar 3 versiones"}
+                </Button>
+              </div>
+            )}
+
+            {!generationContext && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Crea el menú de hoy para generar el texto.
+              </p>
+            )}
           </div>
 
-          <dl className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <dt className="text-sm text-muted-foreground">
-                Entrada
-              </dt>
-              <dd className="font-medium">
-                {generationContext.menu.starter}
-              </dd>
+          {versions && versions.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-foreground">
+                Elige una versión para usarla en la publicación
+              </p>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                {versions.map((version, index) => (
+                  <Card
+                    key={index}
+                    size="sm"
+                  >
+                    <CardContent>
+                      <p className="whitespace-pre-line text-sm">
+                        {version.text}
+                      </p>
+                    </CardContent>
+
+                    <CardFooter>
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="w-full"
+                        onClick={() =>
+                          handleUseVersion(version.text)
+                        }
+                      >
+                        Usar esta versión
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
             </div>
-
-            <div>
-              <dt className="text-sm text-muted-foreground">
-                Plato principal
-              </dt>
-              <dd className="font-medium">
-                {generationContext.menu.main_course}
-              </dd>
-            </div>
-
-            <div>
-              <dt className="text-sm text-muted-foreground">
-                Postre
-              </dt>
-              <dd className="font-medium">
-                {generationContext.menu.dessert}
-              </dd>
-            </div>
-          </dl>
-
-          <p className="text-sm font-medium">
-            Incluye jugo y pan amasado hecho en el local.
-          </p>
-
-          {generationContext.photoPath && (
-            <p className="text-sm text-muted-foreground">
-              La fotografía asociada se analizará automáticamente al generar el texto.
-            </p>
-          )}
-        </div>
-      )}
-
-      {generationContext && (
-        <div>
-          <label
-            htmlFor="post-prompt"
-            className="mb-2 block text-sm font-medium"
-          >
-            Enfoque de la publicación
-          </label>
-
-          <select
-            id="post-prompt"
-            value={promptId}
-            onChange={(event) =>
-              setPromptId(
-                event.target.value as AIPostPromptId
-              )
-            }
-            disabled={generating}
-            className="w-full rounded-md border p-2"
-          >
-            {REUSABLE_POST_PROMPTS.map((prompt) => (
-              <option
-                key={prompt.id}
-                value={prompt.id}
-              >
-                {prompt.label}
-              </option>
-            ))}
-          </select>
-
-          <p className="mt-2 text-sm text-muted-foreground">
-            {
-              REUSABLE_POST_PROMPTS.find(
-                (prompt) => prompt.id === promptId
-              )?.description
-            }
-          </p>
-        </div>
-      )}
-
-      {generationContext && (
-        <div>
-          <label
-            htmlFor="post-tone"
-            className="mb-2 block text-sm font-medium"
-          >
-            Tono de la publicación
-          </label>
-
-          <select
-            id="post-tone"
-            value={tone}
-            onChange={(event) =>
-              setTone(event.target.value as AIPostTone)
-            }
-            disabled={generating}
-            className="w-full rounded-md border p-2"
-          >
-            <option value="casual">Cercano</option>
-            <option value="formal">Formal</option>
-            <option value="promotional">Promocional</option>
-          </select>
-        </div>
-      )}
-
-      <div>
-        <label className="mb-2 block text-sm font-medium">
-          Publicación
-        </label>
-
-        {(mode === "edit" || hasGeneratedContent) ? (
-          <textarea
-            {...register("content")}
-            rows={12}
-            className="w-full rounded-md border p-3"
-          />
-        ) : (
-          <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-            Presiona “Generar con IA” para crear el texto completo automáticamente.
-          </p>
-        )}
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={
-              generating || !generationContext
-            }
-            onClick={handleGenerate}
-          >
-            {generating && operation === "generate"
-              ? "Generando..."
-              : "Generar con IA"}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            disabled={
-              generating || !generationContext
-            }
-            onClick={handleGenerateShort}
-          >
-            {generating && operation === "short"
-              ? "Creando texto corto..."
-              : "Texto corto"}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            disabled={
-              generating || !generationContext
-            }
-            onClick={handleGenerateLong}
-          >
-            {generating && operation === "long"
-              ? "Creando texto largo..."
-              : "Texto largo"}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            disabled={
-              generating || !generationContext
-            }
-            onClick={handleGenerateVersions}
-          >
-            {generating && operation === "versions"
-              ? "Generando versiones..."
-              : "Generar 3 versiones"}
-          </Button>
-
-          {hasGeneratedContent && (
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={
-                generating || !generationContext
-              }
-              onClick={handleRewrite}
-            >
-              {generating && operation === "rewrite"
-                ? "Reescribiendo..."
-                : "Reescribir con IA"}
-            </Button>
           )}
 
-          {hasGeneratedContent && (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={
-                generating || !generationContext
-              }
-              onClick={handleAddHashtags}
-            >
-              {generating && operation === "hashtags"
-                ? "Agregando hashtags..."
-                : "Agregar hashtags"}
-            </Button>
+          {notice && (
+            <Alert variant="info">
+              <AlertTitle>
+                Texto sugerido generado
+              </AlertTitle>
+              <AlertDescription>
+                {notice}
+              </AlertDescription>
+            </Alert>
           )}
 
-          {hasGeneratedContent && (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={
-                generating || !generationContext
-              }
-              onClick={handleAddEmojis}
-            >
-              {generating && operation === "emojis"
-                ? "Agregando emojis..."
-                : "Agregar emojis"}
-            </Button>
-          )}
+          {context && (
+            <Alert>
+              <AlertTitle>
+                Contexto utilizado
+              </AlertTitle>
+              <AlertDescription>
+                <p>
+                  {context.greeting}
+                  {context.weatherSummary
+                    ? ` · ${context.weatherSummary}`
+                    : " · Clima no configurado"}
+                </p>
 
-          <Button
-            type="button"
-            variant="outline"
-            disabled={
-              generating || !generationContext
-            }
-            onClick={handleUseTemplate}
-          >
-            Usar plantilla local
-          </Button>
-        </div>
+                <p className="mt-2">
+                  Fotografía sugerida: {context.photoSuggestion}
+                </p>
 
-        {!generationContext && (
-          <p className="mt-2 text-sm text-muted-foreground">
-            Crea el menú de hoy para generar el texto.
-          </p>
-        )}
-      </div>
-
-      {versions && versions.length > 0 && (
-        <div className="space-y-3">
-          <p className="text-sm font-medium">
-            Elige una versión para usarla en la publicación
-          </p>
-
-          <div className="grid gap-3 sm:grid-cols-3">
-            {versions.map((version, index) => (
-              <Card
-                key={index}
-                size="sm"
-              >
-                <CardContent>
-                  <p className="whitespace-pre-line text-sm">
-                    {version.text}
+                {context.weatherSource && (
+                  <p className="mt-2 text-xs">
+                    Clima proporcionado por{
+                      " "
+                    }
+                    <a
+                      href="https://www.weatherapi.com/"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      WeatherAPI.com
+                    </a>
                   </p>
-                </CardContent>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
 
-                <CardFooter>
+          {error && (
+            <Alert variant="destructive">
+              <AlertTitle>
+                No fue posible generar con IA
+              </AlertTitle>
+              <AlertDescription>
+                <p>{error.message}</p>
+
+                <div className="mt-3 flex flex-wrap gap-2">
                   <Button
                     type="button"
                     size="sm"
-                    className="w-full"
-                    onClick={() =>
-                      handleUseVersion(version.text)
-                    }
+                    variant="outline"
+                    disabled={generating}
+                    onClick={handleGenerateByLength}
                   >
-                    Usar esta versión
+                    Reintentar
                   </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {notice && (
-        <Alert>
-          <AlertTitle>
-            Texto sugerido generado
-          </AlertTitle>
-          <AlertDescription>
-            {notice}
-          </AlertDescription>
-        </Alert>
-      )}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={generating}
+                    onClick={handleUseTemplate}
+                  >
+                    Usar plantilla local
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
 
-      {context && (
-        <Alert>
-          <AlertTitle>
-            Contexto utilizado
-          </AlertTitle>
-          <AlertDescription>
-            <p>
-              {context.greeting}
-              {context.weatherSummary
-                ? ` · ${context.weatherSummary}`
-                : " · Clima no configurado"}
-            </p>
+          {mode === "edit" ? (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
+                Plataforma
+              </label>
 
-            <p className="mt-2">
-              Fotografía sugerida: {context.photoSuggestion}
-            </p>
-
-            {context.weatherSource && (
-              <p className="mt-2 text-xs">
-                Clima proporcionado por{
-                  " "
-                }
-                <a
-                  href="https://www.weatherapi.com/"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  WeatherAPI.com
-                </a>
-              </p>
-            )}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertTitle>
-            No fue posible generar con IA
-          </AlertTitle>
-          <AlertDescription>
-            <p>{error.message}</p>
-
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={generating}
-                onClick={handleGenerate}
+              <Select
+                {...register("platform")}
               >
-                Reintentar
-              </Button>
+                <option value="instagram">
+                  Instagram
+                </option>
 
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={generating}
-                onClick={handleUseTemplate}
-              >
-                Usar plantilla local
-              </Button>
+                <option value="facebook">
+                  Facebook
+                </option>
+
+                <option value="whatsapp">
+                  WhatsApp
+                </option>
+              </Select>
             </div>
-          </AlertDescription>
-        </Alert>
-      )}
+          ) : (
+            <input
+              type="hidden"
+              {...register("platform")}
+            />
+          )}
 
-      {mode === "edit" ? (
-        <div>
-          <label className="mb-2 block text-sm font-medium">
-            Plataforma
-          </label>
-
-          <select
-            {...register("platform")}
-            className="w-full rounded-md border p-2"
-          >
-            <option value="instagram">
-              Instagram
-            </option>
-
-            <option value="facebook">
-              Facebook
-            </option>
-
-            <option value="whatsapp">
-              WhatsApp
-            </option>
-          </select>
-        </div>
-      ) : (
-        <input
-          type="hidden"
-          {...register("platform")}
-        />
-      )}
-
-      <Button
-        type="submit"
-        disabled={
-          isSubmitting || !hasGeneratedContent
-        }
-      >
-        Guardar borrador
-      </Button>
-    </form>
+          <div className="flex justify-end border-t border-border pt-5">
+            <Button
+              type="submit"
+              size="lg"
+              disabled={
+                isSubmitting || !hasGeneratedContent
+              }
+            >
+              Guardar borrador
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

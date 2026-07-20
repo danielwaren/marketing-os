@@ -15,12 +15,12 @@ export function DashboardHeader({
         : "Buenas noches";
 
   return (
-    <header className="space-y-2">
-      <p className="text-sm font-medium text-muted-foreground">
+    <header className="space-y-1.5">
+      <p className="text-sm font-medium text-primary">
         {greeting}
       </p>
 
-      <h1 className="text-4xl font-semibold tracking-tight">
+      <h1 className="font-heading text-3xl font-semibold tracking-tight text-foreground">
         {workspaceName}
       </h1>
 

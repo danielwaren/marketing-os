@@ -18,6 +18,8 @@ Antes de escribir código:
 
 8. Pensar la solución antes de escribir código.
 
+9. Todo cambio importante (nuevo módulo, cambio de flujo, integración nueva) debe actualizar `src/pages/app/wiki.astro` para que siga reflejando cómo funciona la app hoy. Un ticket no se considera cerrado si dejó la wiki desactualizada.
+
 ---
 
 ## Formato de respuesta
