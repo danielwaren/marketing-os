@@ -174,15 +174,27 @@ Deno.serve(async (request) => {
     const untilUnix = Math.floor(Date.now() / 1000);
     const sinceUnix =
       untilUnix - WINDOW_DAYS * DAY_SECONDS;
+    const previousUntilUnix = sinceUnix;
+    const previousSinceUnix =
+      previousUntilUnix - WINDOW_DAYS * DAY_SECONDS;
 
-    const metric = (name: string) =>
+    const metricFor = (
+      windowSinceUnix: number,
+      windowUntilUnix: number
+    ) => (name: string) =>
       fetchTotalValueMetric({
         igUserId: connection.ig_user_id,
         accessToken: connection.access_token,
         metric: name,
-        sinceUnix,
-        untilUnix,
+        sinceUnix: windowSinceUnix,
+        untilUnix: windowUntilUnix,
       });
+
+    const metric = metricFor(sinceUnix, untilUnix);
+    const previousMetric = metricFor(
+      previousSinceUnix,
+      previousUntilUnix
+    );
 
     const profile = await fetchAccountProfile(
       connection.ig_user_id,
@@ -190,28 +202,58 @@ Deno.serve(async (request) => {
     );
 
     const [
-      reach,
-      profileViews,
-      totalInteractions,
-      likes,
-      comments,
-      shares,
-      accountsEngaged,
-      reachByFollowType,
+      [
+        reach,
+        profileViews,
+        profileLinksTaps,
+        totalInteractions,
+        likes,
+        comments,
+        shares,
+        saves,
+        accountsEngaged,
+        reachByFollowType,
+      ],
+      [
+        previousReach,
+        previousProfileViews,
+        previousProfileLinksTaps,
+        previousTotalInteractions,
+        previousLikes,
+        previousComments,
+        previousShares,
+        previousSaves,
+        previousAccountsEngaged,
+      ],
     ] = await Promise.all([
-      metric("reach"),
-      metric("profile_views"),
-      metric("total_interactions"),
-      metric("likes"),
-      metric("comments"),
-      metric("shares"),
-      metric("accounts_engaged"),
-      fetchReachByFollowType({
-        igUserId: connection.ig_user_id,
-        accessToken: connection.access_token,
-        sinceUnix,
-        untilUnix,
-      }),
+      Promise.all([
+        metric("reach"),
+        metric("profile_views"),
+        metric("profile_links_taps"),
+        metric("total_interactions"),
+        metric("likes"),
+        metric("comments"),
+        metric("shares"),
+        metric("saved"),
+        metric("accounts_engaged"),
+        fetchReachByFollowType({
+          igUserId: connection.ig_user_id,
+          accessToken: connection.access_token,
+          sinceUnix,
+          untilUnix,
+        }),
+      ]),
+      Promise.all([
+        previousMetric("reach"),
+        previousMetric("profile_views"),
+        previousMetric("profile_links_taps"),
+        previousMetric("total_interactions"),
+        previousMetric("likes"),
+        previousMetric("comments"),
+        previousMetric("shares"),
+        previousMetric("saved"),
+        previousMetric("accounts_engaged"),
+      ]),
     ]);
 
     return jsonResponse({
@@ -222,13 +264,28 @@ Deno.serve(async (request) => {
       periodDays: WINDOW_DAYS,
       reach,
       profileViews,
+      profileLinksTaps,
       reachByFollowType,
       engagement: {
         totalInteractions,
         likes,
         comments,
         shares,
+        saves,
         accountsEngaged,
+      },
+      previousPeriod: {
+        reach: previousReach,
+        profileViews: previousProfileViews,
+        profileLinksTaps: previousProfileLinksTaps,
+        engagement: {
+          totalInteractions: previousTotalInteractions,
+          likes: previousLikes,
+          comments: previousComments,
+          shares: previousShares,
+          saves: previousSaves,
+          accountsEngaged: previousAccountsEngaged,
+        },
       },
       updatedAt: new Date().toISOString(),
     });

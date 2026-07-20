@@ -1,4 +1,5 @@
 import type { ReachByFollowType } from "../types/analytics";
+import { Card } from "@/components/ui/card";
 
 interface Props {
   breakdown: ReachByFollowType;
@@ -25,13 +26,13 @@ export function ReachBreakdown({ breakdown }: Props) {
       key: "nonFollower",
       label: "No te siguen",
       value: breakdown.nonFollower,
-      colorClass: "bg-foreground",
+      colorClass: "bg-primary",
     },
     {
       key: "follower",
       label: "Te siguen",
       value: breakdown.follower,
-      colorClass: "bg-muted-foreground",
+      colorClass: "bg-success",
     },
     {
       key: "unknown",
@@ -47,7 +48,7 @@ export function ReachBreakdown({ breakdown }: Props) {
   );
 
   return (
-    <article className="rounded-xl border bg-card p-6">
+    <Card className="px-6">
       <h3 className="text-sm font-medium text-muted-foreground">
         Alcance por tipo de audiencia
       </h3>
@@ -109,6 +110,6 @@ export function ReachBreakdown({ breakdown }: Props) {
           </ul>
         </>
       )}
-    </article>
+    </Card>
   );
 }

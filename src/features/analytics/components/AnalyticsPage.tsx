@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Alert,
   AlertDescription,
@@ -88,19 +89,19 @@ export default function AnalyticsPage() {
 
       {insights && (
         <>
-          <div className="flex items-center gap-4 rounded-xl border bg-card p-6">
+          <Card className="flex flex-row items-center gap-4 px-6">
             {insights.profilePictureUrl ? (
               <img
                 src={insights.profilePictureUrl}
                 alt={insights.username ?? "Perfil"}
-                className="h-16 w-16 rounded-full object-cover"
+                className="h-16 w-16 rounded-full object-cover ring-2 ring-primary/20"
               />
             ) : (
               <div className="h-16 w-16 rounded-full bg-muted" />
             )}
 
             <div>
-              <p className="text-lg font-semibold">
+              <p className="text-lg font-semibold text-foreground">
                 @{insights.username ?? "cuenta"}
               </p>
               <p className="text-sm text-muted-foreground">
@@ -114,19 +115,32 @@ export default function AnalyticsPage() {
                 publicaciones
               </p>
             </div>
-          </div>
+          </Card>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-3">
             <MetricCard
               label={`Alcance (últimos ${periodDays} días)`}
               value={insights.reach}
               hint="Cuentas únicas que vieron el contenido."
+              previousValue={insights.previousPeriod.reach}
             />
 
             <MetricCard
               label={`Visitas al perfil (últimos ${periodDays} días)`}
               value={insights.profileViews}
               hint="Veces que se abrió el perfil."
+              previousValue={
+                insights.previousPeriod.profileViews
+              }
+            />
+
+            <MetricCard
+              label={`Clics en enlaces del perfil (últimos ${periodDays} días)`}
+              value={insights.profileLinksTaps}
+              hint="Toques en los botones del perfil (sitio web, llamar, etc.)."
+              previousValue={
+                insights.previousPeriod.profileLinksTaps
+              }
             />
           </div>
 
@@ -150,30 +164,56 @@ export default function AnalyticsPage() {
                 label="Interacciones totales"
                 value={insights.engagement.totalInteractions}
                 hint="Me gusta, comentarios y compartidos sumados."
+                previousValue={
+                  insights.previousPeriod.engagement
+                    .totalInteractions
+                }
               />
 
               <MetricCard
                 label="Cuentas que interactuaron"
                 value={insights.engagement.accountsEngaged}
                 hint="Cuentas únicas que interactuaron."
+                previousValue={
+                  insights.previousPeriod.engagement
+                    .accountsEngaged
+                }
               />
 
               <MetricCard
                 label="Me gusta"
                 value={insights.engagement.likes}
                 hint="Reacciones al contenido."
+                previousValue={
+                  insights.previousPeriod.engagement.likes
+                }
               />
 
               <MetricCard
                 label="Comentarios"
                 value={insights.engagement.comments}
                 hint="Comentarios recibidos."
+                previousValue={
+                  insights.previousPeriod.engagement.comments
+                }
               />
 
               <MetricCard
                 label="Compartidos"
                 value={insights.engagement.shares}
                 hint="Veces que se compartió el contenido."
+                previousValue={
+                  insights.previousPeriod.engagement.shares
+                }
+              />
+
+              <MetricCard
+                label="Guardados"
+                value={insights.engagement.saves}
+                hint="Veces que guardaron el contenido."
+                previousValue={
+                  insights.previousPeriod.engagement.saves
+                }
               />
             </div>
           </div>
@@ -184,8 +224,8 @@ export default function AnalyticsPage() {
               dateStyle: "medium",
               timeStyle: "short",
             }).format(new Date(insights.updatedAt))}
-            . Los guardados, clics y comparativas llegarán en
-            los próximos avances del módulo.
+            . Las comparativas se calculan contra los{" "}
+            {periodDays} días previos al período mostrado.
           </p>
         </>
       )}

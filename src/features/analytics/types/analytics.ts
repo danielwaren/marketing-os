@@ -3,6 +3,7 @@ export interface InstagramEngagement {
   likes: number | null;
   comments: number | null;
   shares: number | null;
+  saves: number | null;
   accountsEngaged: number | null;
 }
 
@@ -10,6 +11,13 @@ export interface ReachByFollowType {
   follower: number | null;
   nonFollower: number | null;
   unknown: number | null;
+}
+
+export interface InstagramPreviousPeriod {
+  reach: number | null;
+  profileViews: number | null;
+  profileLinksTaps: number | null;
+  engagement: InstagramEngagement;
 }
 
 export interface InstagramInsights {
@@ -20,8 +28,10 @@ export interface InstagramInsights {
   periodDays: number;
   reach: number | null;
   profileViews: number | null;
+  profileLinksTaps: number | null;
   reachByFollowType: ReachByFollowType;
   engagement: InstagramEngagement;
+  previousPeriod: InstagramPreviousPeriod;
   updatedAt: string;
 }
 
