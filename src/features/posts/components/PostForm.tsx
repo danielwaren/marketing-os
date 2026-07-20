@@ -47,6 +47,7 @@ interface Props {
     ) | null;
   mode?: "create" | "edit";
   onSubmit(data: PostSchema): Promise<void>;
+  onPreview?(data: PostSchema): Promise<void>;
 }
 
 type PostLength = "short" | "standard" | "long";
@@ -65,7 +66,10 @@ export function PostForm({
   generationContext,
   mode = "create",
   onSubmit,
+  onPreview,
 }: Props) {
+  const [previewing, setPreviewing] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -694,7 +698,29 @@ export function PostForm({
             />
           )}
 
-          <div className="flex justify-end border-t border-border pt-5">
+          <div className="flex flex-wrap justify-end gap-3 border-t border-border pt-5">
+            {onPreview && (
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                disabled={
+                  isSubmitting ||
+                  previewing ||
+                  !hasGeneratedContent
+                }
+                onClick={handleSubmit(async (data) => {
+                  setPreviewing(true);
+                  await onPreview(data);
+                  setPreviewing(false);
+                })}
+              >
+                {previewing
+                  ? "Abriendo vista previa..."
+                  : "Vista previa"}
+              </Button>
+            )}
+
             <Button
               type="submit"
               size="lg"

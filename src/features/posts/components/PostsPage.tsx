@@ -174,6 +174,48 @@ export default function PostsPage() {
     }
   }
 
+  async function handlePreviewNew(data: PostSchema) {
+    const result = await create(data);
+
+    if (result?.data) {
+      setCreating(false);
+      setSuggestedFormat(null);
+      setPreviewPost(result.data);
+    }
+  }
+
+  async function handlePreviewEdit(data: PostSchema) {
+    if (!editingPost) return;
+
+    const { data: updated, error } = await update(
+      editingPost.id,
+      data
+    );
+
+    if (!error && updated) {
+      setEditingPost(null);
+      setPreviewPost(updated);
+    }
+  }
+
+  async function handlePreviewPublish(
+    mediaType: "feed" | "stories"
+  ) {
+    if (!previewPost) return;
+
+    await handlePublish(previewPost, mediaType);
+    setPreviewPost(null);
+  }
+
+  async function handlePreviewSchedule(
+    scheduledAt: string
+  ) {
+    if (!previewPost) return;
+
+    await handleSchedule(previewPost.id, scheduledAt);
+    setPreviewPost(null);
+  }
+
   async function handleDelete(post: Post) {
     const confirmed = window.confirm(
       `¿Eliminar el borrador "${post.title}"?`
@@ -445,6 +487,7 @@ export default function PostsPage() {
           generationContext={generationContext}
           mode="create"
           onSubmit={handleCreate}
+          onPreview={handlePreviewNew}
         />
       )}
 
@@ -459,6 +502,7 @@ export default function PostsPage() {
           generationContext={generationContext}
           mode="edit"
           onSubmit={handleUpdate}
+          onPreview={handlePreviewEdit}
         />
       )}
 
@@ -837,6 +881,16 @@ export default function PostsPage() {
           workspace?.instagram_username ?? null
         }
         onClose={() => setPreviewPost(null)}
+        instagramConnected={instagramConnected}
+        publishing={
+          previewPost &&
+          publishing?.postId === previewPost.id &&
+          publishing.mediaType !== "carousel"
+            ? publishing.mediaType
+            : null
+        }
+        onPublish={handlePreviewPublish}
+        onSchedule={handlePreviewSchedule}
       />
 
       <CarouselPickerDialog

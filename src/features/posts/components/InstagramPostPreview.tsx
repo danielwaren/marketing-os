@@ -10,6 +10,7 @@ import {
   Avatar,
   AvatarFallback,
 } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -23,6 +24,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { MenuPhoto } from "@/features/menu/components/MenuPhoto";
+import { PostScheduler } from "@/features/calendar/components/PostScheduler";
 
 import type { Post } from "../types/post";
 
@@ -31,6 +33,10 @@ interface InstagramPostPreviewProps {
   workspaceName: string;
   instagramUsername: string | null;
   onClose(): void;
+  instagramConnected?: boolean;
+  publishing?: "feed" | "stories" | null;
+  onPublish?(mediaType: "feed" | "stories"): void;
+  onSchedule?(scheduledAt: string): void;
 }
 
 export function InstagramPostPreview({
@@ -38,10 +44,21 @@ export function InstagramPostPreview({
   workspaceName,
   instagramUsername,
   onClose,
+  instagramConnected = false,
+  publishing = null,
+  onPublish,
+  onSchedule,
 }: InstagramPostPreviewProps) {
   if (!post) {
     return null;
   }
+
+  const hasPhoto = Boolean(
+    post.menu?.media || post.media
+  );
+  const canAct =
+    post.platform === "instagram" &&
+    post.status !== "published";
 
   const username =
     instagramUsername?.replace(/^@/, "") ||
@@ -92,10 +109,13 @@ export function InstagramPostPreview({
               />
             </CardHeader>
 
-            {post.menu?.media ? (
+            {post.menu?.media || post.media ? (
               <div className="[&_img]:mt-0 [&_img]:aspect-square [&_img]:h-auto [&_img]:rounded-none">
                 <MenuPhoto
-                  filePath={post.menu.media.file_path}
+                  filePath={
+                    (post.menu?.media ?? post.media)!
+                      .file_path
+                  }
                 />
               </div>
             ) : (
@@ -142,6 +162,64 @@ export function InstagramPostPreview({
               </p>
             </CardContent>
           </Card>
+
+          {canAct && (onPublish || onSchedule) && (
+            <div className="mx-auto mt-5 max-w-md space-y-3">
+              {!instagramConnected && (
+                <p className="text-sm text-warning-foreground">
+                  Conecta Instagram para publicar directo
+                  desde aquí.
+                </p>
+              )}
+
+              {instagramConnected && !hasPhoto && (
+                <p className="text-sm text-warning-foreground">
+                  Agrega una fotografía al menú o a la
+                  publicación para poder publicarla.
+                </p>
+              )}
+
+              <div className="flex flex-wrap gap-2">
+                {onPublish && (
+                  <Button
+                    disabled={
+                      !instagramConnected ||
+                      !hasPhoto ||
+                      publishing !== null
+                    }
+                    onClick={() => onPublish("feed")}
+                  >
+                    {publishing === "feed"
+                      ? "Publicando..."
+                      : "Publicar en Instagram"}
+                  </Button>
+                )}
+
+                {onPublish && (
+                  <Button
+                    variant="outline"
+                    disabled={
+                      !instagramConnected ||
+                      !hasPhoto ||
+                      publishing !== null
+                    }
+                    onClick={() => onPublish("stories")}
+                  >
+                    {publishing === "stories"
+                      ? "Publicando historia..."
+                      : "Publicar historia"}
+                  </Button>
+                )}
+
+                {onSchedule && (
+                  <PostScheduler
+                    disabled={publishing !== null}
+                    onSchedule={onSchedule}
+                  />
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>
