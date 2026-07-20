@@ -40,7 +40,7 @@ export default function DailyMenuPage() {
     }
 
     setSelectedMedia(null);
-    alert("Menú guardado correctamente");
+    window.location.href = "/app/posts";
   }
 
   async function handleUpdate(data: DailyMenuSchema) {
