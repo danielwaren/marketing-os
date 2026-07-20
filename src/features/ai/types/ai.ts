@@ -24,7 +24,17 @@ export type AIPostTone =
 export type AIPostPromptId =
   | "daily-menu"
   | "lunch-invitation"
-  | "local-homemade";
+  | "local-homemade"
+  | "seasonal-event";
+
+export type WeekendBoost = "largo" | "puente" | null;
+
+export interface SeasonalEvent {
+  name: string;
+  date: string;
+  daysUntil: number;
+  weekendBoost: WeekendBoost;
+}
 
 export type AIErrorCode =
   | "provider_not_configured"
@@ -91,6 +101,7 @@ export interface GeneratePostContext {
   isCold: boolean;
   photoSuggestion: string;
   weatherSource: "WeatherAPI.com" | null;
+  seasonalEvent?: SeasonalEvent | null;
 }
 
 export interface GeneratePostResult {

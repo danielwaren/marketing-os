@@ -26,6 +26,7 @@ export const generatePostTextSchema:
     "daily-menu",
     "lunch-invitation",
     "local-homemade",
+    "seasonal-event",
   ]).optional(),
   sourceText: z.string().min(10).max(5000).optional(),
   versionCount: z.union([

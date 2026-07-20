@@ -301,6 +301,17 @@ export function buildPostPrompt(
     `Día y hora local: ${input.context?.localTime || "no disponible"}`,
     `Momento del día: ${input.context?.timeOfDay || "no disponible"}`,
     `Clima actual: ${input.context?.weatherSummary || "no disponible"}`,
+    ...(input.context?.seasonalEvent
+      ? [
+          `Fecha clave próxima: ${input.context.seasonalEvent.name}, en ${input.context.seasonalEvent.daysUntil} día(s)${
+            input.context.seasonalEvent.weekendBoost === "largo"
+              ? " (genera fin de semana largo)"
+              : input.context.seasonalEvent.weekendBoost === "puente"
+                ? " (posible puente)"
+                : ""
+          }. Si aporta valor, puedes mencionarla o invitar a planificar la visita para esa fecha, sin inventar promociones ni horarios especiales que no se hayan indicado.`,
+        ]
+      : []),
     "Dato obligatorio: el menú diario incluye jugo y pan amasado hecho en el local.",
   ].join("\n");
 }

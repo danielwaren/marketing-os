@@ -26,6 +26,9 @@ import type {
 import {
   getGenerationContext,
 } from "../../../src/features/ai/services/weather.service.ts";
+import {
+  getUpcomingSeasonalEvent,
+} from "../../../src/features/ai/services/seasonal.service.ts";
 
 declare const Deno: {
   env: {
@@ -141,7 +144,7 @@ function isValidPayload(
     ["generate", "rewrite", "hashtags", "emojis"].includes(action) &&
     ["standard", "short", "long"].includes(length) &&
     ["formal", "casual", "promotional"].includes(tone) &&
-    ["daily-menu", "lunch-invitation", "local-homemade"].includes(promptId) &&
+    ["daily-menu", "lunch-invitation", "local-homemade", "seasonal-event"].includes(promptId) &&
     (
       payload.versionCount === undefined ||
       [2, 3].includes(payload.versionCount)
@@ -411,7 +414,10 @@ Deno.serve(async (request) => {
   );
   const generationInput: GeneratePostInput = {
     ...payload,
-    context,
+    context: {
+      ...context,
+      seasonalEvent: getUpcomingSeasonalEvent(),
+    },
   };
   const templates = new TemplatesProvider();
   const providers = getRemoteProviders(selected);

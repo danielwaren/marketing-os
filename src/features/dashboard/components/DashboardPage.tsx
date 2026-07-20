@@ -9,12 +9,14 @@ import { DashboardHeader } from "./DashboardHeader";
 import { DashboardCard } from "./DashboardCard";
 import { AIUsageCard } from "./AIUsageCard";
 import { ContentSuggestions } from "./ContentSuggestions";
+import { SeasonalSuggestionBanner } from "./SeasonalSuggestionBanner";
 
 import { useWorkspace } from "@/features/workspace/hooks/useWorkspace";
 import { useMedia } from "@/features/media/hooks/useMedia";
 import { useDailyMenu } from "@/features/menu/hooks/useDailyMenu";
 import { useInstagramConnection } from "@/features/instagram/hooks/useInstagramConnection";
 import { usePosts } from "@/features/posts/hooks/usePosts";
+import { useSeasonalSuggestion } from "../hooks/useSeasonalSuggestion";
 
 export default function DashboardPage() {
   const {
@@ -37,6 +39,8 @@ export default function DashboardPage() {
     useInstagramConnection(workspace?.id ?? null);
 
   const { posts, loading: postsLoading } = usePosts();
+
+  const seasonal = useSeasonalSuggestion();
 
   const loading =
     workspaceLoading ||
@@ -146,6 +150,15 @@ export default function DashboardPage() {
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <AIUsageCard workspaceId={workspace.id} />
       </div>
+
+      {seasonal.available && (
+        <SeasonalSuggestionBanner
+          event={seasonal.event}
+          message={seasonal.message}
+          workspace={workspace}
+          menu={menu}
+        />
+      )}
 
       <ContentSuggestions
         media={media}
