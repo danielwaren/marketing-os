@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 
-import { getSignedUrl } from "@/features/media/services/media.service";
+import {
+  getSignedUrl,
+  uploadComposedImage,
+} from "@/features/media/services/media.service";
+import type { Media } from "@/features/media/types/media";
 import type { DailyMenu } from "@/features/menu/types/daily-menu";
 import type { Workspace } from "@/features/workspace/types/workspace";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { StoryDesignPicker } from "@/features/story-design/StoryDesignPicker";
+import type { StoryTemplateId } from "@/features/story-design/templates";
 
 import {
   stashSuggestion,
@@ -40,6 +46,15 @@ export function SuggestionCard({
     string | null
   >(null);
   const [loading, setLoading] = useState(true);
+  const [designedMedia, setDesignedMedia] =
+    useState<Media | null>(null);
+  const [designSkipped, setDesignSkipped] =
+    useState(false);
+  const [uploadingDesign, setUploadingDesign] =
+    useState(false);
+  const [designError, setDesignError] = useState<
+    string | null
+  >(null);
 
   const automation = useStoryAutomation({
     workspace,
@@ -86,6 +101,40 @@ export function SuggestionCard({
       workspace?.auto_publish_stories ?? false
     );
   }
+
+  async function handleConfirmDesign(
+    blob: Blob,
+    _templateId: StoryTemplateId
+  ) {
+    if (!workspace) return;
+
+    setUploadingDesign(true);
+    setDesignError(null);
+
+    const result = await uploadComposedImage(
+      workspace.id,
+      blob,
+      `historia-menu-${Date.now()}.png`
+    );
+
+    if (result.error || !result.data) {
+      setDesignError(
+        "No fue posible preparar el diseño. Puedes usar la foto original."
+      );
+      setUploadingDesign(false);
+      return;
+    }
+
+    setDesignedMedia(result.data as Media);
+    setUploadingDesign(false);
+  }
+
+  const activeMedia =
+    designedMedia ?? suggestion.media;
+  const needsDesignChoice =
+    Boolean(menu) &&
+    !designedMedia &&
+    !designSkipped;
 
   return (
     <Card className="overflow-hidden py-0">
@@ -187,8 +236,44 @@ export function SuggestionCard({
               </p>
             )}
 
-            {automation.state === "ready" && (
+            {automation.state === "ready" &&
+              needsDesignChoice &&
+              menu &&
+              signedUrl && (
+                <div className="space-y-2">
+                  {designError && (
+                    <p className="text-xs text-destructive">
+                      {designError}
+                    </p>
+                  )}
+
+                  <StoryDesignPicker
+                    photoUrl={signedUrl}
+                    data={{
+                      starter: menu.starter,
+                      main_course: menu.main_course,
+                      dessert: menu.dessert,
+                      price: Number(menu.price),
+                    }}
+                    confirming={uploadingDesign}
+                    onConfirm={handleConfirmDesign}
+                    onSkip={() =>
+                      setDesignSkipped(true)
+                    }
+                  />
+                </div>
+              )}
+
+            {automation.state === "ready" &&
+              !needsDesignChoice && (
               <div className="space-y-2">
+                {designedMedia && (
+                  <p className="text-xs font-medium text-success">
+                    Diseño aplicado a la imagen de la
+                    historia.
+                  </p>
+                )}
+
                 <Textarea
                   value={automation.text}
                   onChange={(event) =>
@@ -206,7 +291,7 @@ export function SuggestionCard({
                     size="sm"
                     onClick={() =>
                       automation.saveDraft(
-                        suggestion.media
+                        activeMedia
                       )
                     }
                     className="flex-1"
@@ -219,7 +304,7 @@ export function SuggestionCard({
                     disabled={!instagramConnected}
                     onClick={() =>
                       automation.publishNow(
-                        suggestion.media
+                        activeMedia
                       )
                     }
                     className="flex-1"

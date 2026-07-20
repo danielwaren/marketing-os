@@ -44,6 +44,44 @@ const filePath = `${workspaceId}/${now.getFullYear()}/${String(
   });
 }
 
+// Sube una imagen generada en el navegador (ej. un diseño de historia
+// compuesto con Canvas) en vez de un archivo elegido por el usuario.
+export async function uploadComposedImage(
+  workspaceId: string,
+  blob: Blob,
+  fileName: string
+) {
+  const now = new Date();
+
+  const filePath = `${workspaceId}/${now.getFullYear()}/${String(
+    now.getMonth() + 1
+  ).padStart(2, "0")}/${crypto.randomUUID()}.png`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("media")
+    .upload(filePath, blob, {
+      contentType: "image/png",
+    });
+
+  if (uploadError) {
+    return { data: null, error: uploadError };
+  }
+
+  return await supabase
+    .from("media")
+    .insert({
+      workspace_id: workspaceId,
+      file_name: fileName,
+      file_path: filePath,
+      file_type: "image",
+      mime_type: "image/png",
+      file_size: blob.size,
+      category: "story_design",
+    })
+    .select("*")
+    .single();
+}
+
 export async function getMedia(workspaceId: string) {
   return await supabase
     .from("media")
