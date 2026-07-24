@@ -10,6 +10,7 @@ import { DashboardCard } from "./DashboardCard";
 import { AIUsageCard } from "./AIUsageCard";
 import { ContentSuggestions } from "./ContentSuggestions";
 import { SeasonalSuggestionBanner } from "./SeasonalSuggestionBanner";
+import { PublishNudgeBanner } from "./PublishNudgeBanner";
 
 import { useWorkspace } from "@/features/workspace/hooks/useWorkspace";
 import { useMedia } from "@/features/media/hooks/useMedia";
@@ -71,6 +72,23 @@ export default function DashboardPage() {
       <DashboardHeader
         workspaceName={workspace.name}
       />
+
+      <PublishNudgeBanner
+        posts={posts}
+        media={media}
+        menu={menu}
+        workspace={workspace}
+        instagramConnected={instagramConnected}
+      />
+
+      {seasonal.available && (
+        <SeasonalSuggestionBanner
+          event={seasonal.event}
+          message={seasonal.message}
+          workspace={workspace}
+          menu={menu}
+        />
+      )}
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <DashboardCard
@@ -150,15 +168,6 @@ export default function DashboardPage() {
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <AIUsageCard workspaceId={workspace.id} />
       </div>
-
-      {seasonal.available && (
-        <SeasonalSuggestionBanner
-          event={seasonal.event}
-          message={seasonal.message}
-          workspace={workspace}
-          menu={menu}
-        />
-      )}
 
       <ContentSuggestions
         media={media}
