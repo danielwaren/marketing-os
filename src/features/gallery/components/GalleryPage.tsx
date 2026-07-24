@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 
 import { useWorkspace } from "@/features/workspace/hooks/useWorkspace";
+import { useConfirm } from "@/hooks/useConfirm";
 
 import { GOOGLE_PHOTOS_CLIENT_ID } from "../constants/gallery.constants";
 import { useGooglePhotosConnection } from "../hooks/useGooglePhotosConnection";
@@ -45,6 +46,22 @@ export default function GalleryPage() {
     pickPhotos,
     reset: resetPicker,
   } = usePhotosPicker(workspace?.id ?? null);
+
+  const { confirm, dialog: confirmDialog } = useConfirm();
+
+  async function handleDisconnect() {
+    const confirmed = await confirm({
+      title: "Desconectar Google Photos",
+      description:
+        "Dejarás de poder importar fotos nuevas desde Google Photos hasta que vuelvas a conectar la cuenta. Las fotos ya importadas se mantienen en el banco de medios.",
+      confirmLabel: "Desconectar",
+      variant: "destructive",
+    });
+
+    if (!confirmed) return;
+
+    await disconnect();
+  }
 
   if (loadingWorkspace || loading) {
     return <p>Cargando...</p>;
@@ -110,7 +127,7 @@ export default function GalleryPage() {
               <Button
                 variant="destructive"
                 disabled={connecting}
-                onClick={disconnect}
+                onClick={handleDisconnect}
               >
                 {connecting
                   ? "Desconectando..."
@@ -225,6 +242,8 @@ export default function GalleryPage() {
           </CardContent>
         </Card>
       )}
+
+      {confirmDialog}
     </div>
   );
 }

@@ -247,6 +247,18 @@ export function useCalendar() {
     });
   }
 
+  // Alternativa sin arrastrar: reprograma a una fecha y hora exactas,
+  // elegidas desde un selector accesible por teclado.
+  async function rescheduleToDateTime(
+    post: Post,
+    scheduledAt: string
+  ) {
+    return await update(post.id, {
+      status: "scheduled",
+      scheduled_at: scheduledAt,
+    });
+  }
+
   return {
     workspace,
     loading,
@@ -259,5 +271,6 @@ export function useCalendar() {
     goToNext,
     goToToday,
     reschedule,
+    rescheduleToDateTime,
   };
 }

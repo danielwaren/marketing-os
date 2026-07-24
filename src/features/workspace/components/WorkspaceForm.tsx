@@ -28,10 +28,10 @@ export function WorkspaceForm() {
   } = useForm<WorkspaceSchema>({
     resolver: zodResolver(workspaceSchema),
     defaultValues: {
-      name: "Hostal Monchito",
-      business_type: "Restaurante",
-      city: "Puerto Cisnes",
-      instagram_username: "hostalmonchito",
+      name: "",
+      business_type: "",
+      city: "",
+      instagram_username: "",
       content_focus: "both",
       goal: "both",
     },
@@ -75,6 +75,7 @@ export function WorkspaceForm() {
 
         <Input
           id="workspace-name"
+          placeholder="Ej: Hostal Monchito"
           {...register("name")}
         />
 
@@ -95,6 +96,7 @@ export function WorkspaceForm() {
 
         <Input
           id="workspace-business-type"
+          placeholder="Ej: Restaurante, hostal, cafetería"
           {...register("business_type")}
         />
       </div>
@@ -109,6 +111,7 @@ export function WorkspaceForm() {
 
         <Input
           id="workspace-city"
+          placeholder="Ej: Puerto Cisnes"
           {...register("city")}
         />
       </div>
@@ -123,6 +126,7 @@ export function WorkspaceForm() {
 
         <Input
           id="workspace-instagram"
+          placeholder="Ej: hostalmonchito (sin @)"
           {...register("instagram_username")}
         />
       </div>
@@ -143,6 +147,10 @@ export function WorkspaceForm() {
           <option value="pizza">Pizzas</option>
           <option value="both">Ambos</option>
         </Select>
+
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          Define sobre qué escribe la IA por defecto.
+        </p>
       </div>
 
       <div>
@@ -161,6 +169,10 @@ export function WorkspaceForm() {
           <option value="followers">Seguidores</option>
           <option value="both">Ambos</option>
         </Select>
+
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          Orienta el tono: más directo a la venta o más enfocado en construir comunidad.
+        </p>
       </div>
 
       <Button

@@ -11,6 +11,7 @@ import { AIUsageCard } from "./AIUsageCard";
 import { ContentSuggestions } from "./ContentSuggestions";
 import { SeasonalSuggestionBanner } from "./SeasonalSuggestionBanner";
 import { PublishNudgeBanner } from "./PublishNudgeBanner";
+import { OnboardingChecklist } from "./OnboardingChecklist";
 
 import { useWorkspace } from "@/features/workspace/hooks/useWorkspace";
 import { useMedia } from "@/features/media/hooks/useMedia";
@@ -67,19 +68,30 @@ export default function DashboardPage() {
   const instagramConnected =
     instagramStatus?.connected ?? false;
 
+  const isFullyEmpty =
+    !menu && media.length === 0 && posts.length === 0;
+
   return (
     <div className="space-y-8">
       <DashboardHeader
         workspaceName={workspace.name}
       />
 
-      <PublishNudgeBanner
-        posts={posts}
-        media={media}
-        menu={menu}
-        workspace={workspace}
-        instagramConnected={instagramConnected}
-      />
+      {isFullyEmpty ? (
+        <OnboardingChecklist
+          hasMedia={media.length > 0}
+          hasMenu={Boolean(menu)}
+          hasPosts={posts.length > 0}
+        />
+      ) : (
+        <PublishNudgeBanner
+          posts={posts}
+          media={media}
+          menu={menu}
+          workspace={workspace}
+          instagramConnected={instagramConnected}
+        />
+      )}
 
       {seasonal.available && (
         <SeasonalSuggestionBanner

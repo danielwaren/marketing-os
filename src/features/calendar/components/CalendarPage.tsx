@@ -9,14 +9,9 @@ import {
 import { EmptyState } from "@/components/common/EmptyState";
 
 import { useCalendar } from "../hooks/useCalendar";
+import { CalendarPostChip } from "./CalendarPostChip";
 
-import type { Post, PostStatus } from "@/features/posts/types/post";
-
-const statusDotStyles: Record<PostStatus, string> = {
-  draft: "bg-muted-foreground/40",
-  scheduled: "bg-warning",
-  published: "bg-success",
-};
+import type { Post } from "@/features/posts/types/post";
 
 export default function CalendarPage() {
   const {
@@ -30,6 +25,7 @@ export default function CalendarPage() {
     goToNext,
     goToToday,
     reschedule,
+    rescheduleToDateTime,
   } = useCalendar();
 
   const [draggingPost, setDraggingPost] =
@@ -86,6 +82,24 @@ export default function CalendarPage() {
     }
 
     setRescheduling(false);
+  }
+
+  async function handleKeyboardReschedule(
+    post: Post,
+    scheduledAt: string
+  ) {
+    setRescheduleError(null);
+
+    const { error } = await rescheduleToDateTime(
+      post,
+      scheduledAt
+    );
+
+    if (error) {
+      setRescheduleError(
+        `No fue posible reprogramar "${post.title}". Intenta de nuevo.`
+      );
+    }
   }
 
   const isWeek = view === "week";
@@ -188,7 +202,7 @@ export default function CalendarPage() {
         />
       )}
 
-      <div className="overflow-hidden rounded-xl border">
+      <div className="hidden overflow-hidden rounded-xl border md:block">
         <div className="grid grid-cols-7 border-b bg-muted/30">
           {weekdayLabels.map((label) => (
             <div
@@ -249,42 +263,28 @@ export default function CalendarPage() {
                   </span>
 
                   <div className="space-y-1">
-                    {day.posts.map((post) => {
-                      const draggable =
-                        post.status === "scheduled";
-
-                      return (
-                        <div
-                          key={post.id}
-                          draggable={draggable}
-                          onDragStart={() =>
-                            setDraggingPost(post)
-                          }
-                          onDragEnd={() => {
-                            setDraggingPost(null);
-                            setDropTargetKey(null);
-                          }}
-                          title={
-                            draggable
-                              ? "Arrastra para reprogramar"
-                              : undefined
-                          }
-                          className={`flex items-center gap-1.5 rounded-md bg-muted/50 px-1.5 py-1 text-xs ${
-                            draggable
-                              ? "cursor-grab active:cursor-grabbing"
-                              : ""
-                          }`}
-                        >
-                          <span
-                            className={`h-1.5 w-1.5 shrink-0 rounded-full ${statusDotStyles[post.status]}`}
-                          />
-
-                          <span className="truncate">
-                            {post.title}
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {day.posts.map((post) => (
+                      <CalendarPostChip
+                        key={post.id}
+                        post={post}
+                        draggable={
+                          post.status === "scheduled"
+                        }
+                        onDragStart={() =>
+                          setDraggingPost(post)
+                        }
+                        onDragEnd={() => {
+                          setDraggingPost(null);
+                          setDropTargetKey(null);
+                        }}
+                        onReschedule={(scheduledAt) =>
+                          handleKeyboardReschedule(
+                            post,
+                            scheduledAt
+                          )
+                        }
+                      />
+                    ))}
                   </div>
                 </div>
               );
@@ -292,6 +292,47 @@ export default function CalendarPage() {
           )}
         </div>
       </div>
+
+      {hasAnyPosts && (
+        <div className="space-y-3 md:hidden">
+          {weeks
+            .flatMap((week) => week)
+            .filter((day) => day.posts.length > 0)
+            .map((day) => (
+              <div
+                key={day.dateKey}
+                className={`rounded-xl border p-3 ${
+                  day.isToday
+                    ? "border-primary/40 bg-primary/5"
+                    : ""
+                }`}
+              >
+                <p className="mb-2 text-sm font-medium text-foreground">
+                  {new Intl.DateTimeFormat("es-CL", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "short",
+                  }).format(day.date)}
+                </p>
+
+                <div className="space-y-1">
+                  {day.posts.map((post) => (
+                    <CalendarPostChip
+                      key={post.id}
+                      post={post}
+                      onReschedule={(scheduledAt) =>
+                        handleKeyboardReschedule(
+                          post,
+                          scheduledAt
+                        )
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">

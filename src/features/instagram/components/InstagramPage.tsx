@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 
 import { useWorkspace } from "@/features/workspace/hooks/useWorkspace";
+import { useConfirm } from "@/hooks/useConfirm";
 
 import { useInstagramConnection } from "../hooks/useInstagramConnection";
 
@@ -29,6 +30,22 @@ export default function InstagramPage() {
     connect,
     disconnect,
   } = useInstagramConnection(workspace?.id ?? null);
+
+  const { confirm, dialog: confirmDialog } = useConfirm();
+
+  async function handleDisconnect() {
+    const confirmed = await confirm({
+      title: "Desconectar Instagram",
+      description:
+        "Se detiene toda publicación automática hacia Instagram hasta que vuelvas a conectar la cuenta. Los borradores y publicaciones ya hechas no se pierden.",
+      confirmLabel: "Desconectar",
+      variant: "destructive",
+    });
+
+    if (!confirmed) return;
+
+    await disconnect();
+  }
 
   if (loadingWorkspace || loading) {
     return <p>Cargando...</p>;
@@ -82,7 +99,7 @@ export default function InstagramPage() {
               <Button
                 variant="destructive"
                 disabled={connecting}
-                onClick={disconnect}
+                onClick={handleDisconnect}
               >
                 {connecting
                   ? "Desconectando..."
@@ -119,6 +136,8 @@ export default function InstagramPage() {
           </AlertDescription>
         </Alert>
       )}
+
+      {confirmDialog}
     </div>
   );
 }
