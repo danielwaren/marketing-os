@@ -14,6 +14,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+import { useConfirm } from "@/hooks/useConfirm";
+
 import { usePosts } from "../hooks/usePosts";
 import { PostForm } from "./PostForm";
 import { InstagramPostPreview } from "./InstagramPostPreview";
@@ -83,6 +85,8 @@ export default function PostsPage() {
     refresh,
   } = usePosts();
 
+  const { confirm, dialog: confirmDialog } = useConfirm();
+
   const {
     menu,
   } = useDailyMenu();
@@ -117,6 +121,9 @@ export default function PostsPage() {
 
   const [previewPost, setPreviewPost] =
     useState<Post | null>(null);
+
+  const [previewError, setPreviewError] =
+    useState<string | null>(null);
 
   const [deletingPostId, setDeletingPostId] =
     useState<string | null>(null);
@@ -180,6 +187,7 @@ export default function PostsPage() {
     if (result?.data) {
       setCreating(false);
       setSuggestedFormat(null);
+      setPreviewError(null);
       setPreviewPost(result.data);
     }
   }
@@ -194,6 +202,7 @@ export default function PostsPage() {
 
     if (!error && updated) {
       setEditingPost(null);
+      setPreviewError(null);
       setPreviewPost(updated);
     }
   }
@@ -203,7 +212,20 @@ export default function PostsPage() {
   ) {
     if (!previewPost) return;
 
-    await handlePublish(previewPost, mediaType);
+    // La Vista previa ya es el paso de revisión, así que no se pide una
+    // segunda confirmación (además de evitar anidar dos diálogos).
+    setPreviewError(null);
+
+    const result = await performPublish(
+      previewPost,
+      mediaType
+    );
+
+    if (result?.error) {
+      setPreviewError(result.error.message);
+      return;
+    }
+
     setPreviewPost(null);
   }
 
@@ -212,14 +234,30 @@ export default function PostsPage() {
   ) {
     if (!previewPost) return;
 
-    await handleSchedule(previewPost.id, scheduledAt);
+    setPreviewError(null);
+
+    const result = await handleSchedule(
+      previewPost.id,
+      scheduledAt
+    );
+
+    if (result?.error) {
+      setPreviewError(
+        "No fue posible programar la publicación. Intenta de nuevo."
+      );
+      return;
+    }
+
     setPreviewPost(null);
   }
 
   async function handleDelete(post: Post) {
-    const confirmed = window.confirm(
-      `¿Eliminar el borrador "${post.title}"?`
-    );
+    const confirmed = await confirm({
+      title: "Eliminar borrador",
+      description: `¿Eliminar el borrador "${post.title}"? Esta acción no se puede deshacer.`,
+      confirmLabel: "Eliminar",
+      variant: "destructive",
+    });
 
     if (!confirmed) return;
 
@@ -260,12 +298,14 @@ export default function PostsPage() {
   ) {
     setUpdatingStatusPostId(postId);
 
-    await update(postId, {
+    const result = await update(postId, {
       status: "scheduled",
       scheduled_at: scheduledAt,
     });
 
     setUpdatingStatusPostId(null);
+
+    return result;
   }
 
   async function handleUnschedule(postId: string) {
@@ -279,19 +319,11 @@ export default function PostsPage() {
     setUpdatingStatusPostId(null);
   }
 
-  async function handlePublish(
+  async function performPublish(
     post: Post,
     mediaType: "feed" | "stories"
   ) {
     if (!workspace) return;
-
-    const confirmed = window.confirm(
-      mediaType === "stories"
-        ? `¿Publicar "${post.title}" como historia de Instagram ahora?`
-        : `¿Publicar "${post.title}" en Instagram ahora?`
-    );
-
-    if (!confirmed) return;
 
     setPublishing({ postId: post.id, mediaType });
     setPublishFeedback(null);
@@ -324,6 +356,33 @@ export default function PostsPage() {
     }
 
     setPublishing(null);
+
+    return result;
+  }
+
+  // Usado por los botones de publicar directo en la tarjeta (sin vista
+  // previa de por medio), así que sí pide confirmación.
+  async function handlePublish(
+    post: Post,
+    mediaType: "feed" | "stories"
+  ) {
+    if (!workspace) return;
+
+    const confirmed = await confirm({
+      title:
+        mediaType === "stories"
+          ? "Publicar historia"
+          : "Publicar en Instagram",
+      description:
+        mediaType === "stories"
+          ? `¿Publicar "${post.title}" como historia de Instagram ahora?`
+          : `¿Publicar "${post.title}" en Instagram ahora?`,
+      confirmLabel: "Publicar",
+    });
+
+    if (!confirmed) return;
+
+    await performPublish(post, mediaType);
   }
 
   async function handleConfirmCarousel(
@@ -332,6 +391,14 @@ export default function PostsPage() {
     if (!workspace || !carouselPost) return;
 
     const post = carouselPost;
+
+    const confirmed = await confirm({
+      title: "Publicar carrusel",
+      description: `¿Publicar "${post.title}" como carrusel de ${mediaIds.length} imágenes en Instagram ahora?`,
+      confirmLabel: "Publicar",
+    });
+
+    if (!confirmed) return;
 
     setPublishing({
       postId: post.id,
@@ -880,7 +947,10 @@ export default function PostsPage() {
         instagramUsername={
           workspace?.instagram_username ?? null
         }
-        onClose={() => setPreviewPost(null)}
+        onClose={() => {
+          setPreviewPost(null);
+          setPreviewError(null);
+        }}
         instagramConnected={instagramConnected}
         publishing={
           previewPost &&
@@ -889,6 +959,7 @@ export default function PostsPage() {
             ? publishing.mediaType
             : null
         }
+        error={previewError}
         onPublish={handlePreviewPublish}
         onSchedule={handlePreviewSchedule}
       />
@@ -901,6 +972,8 @@ export default function PostsPage() {
         onClose={() => setCarouselPost(null)}
         onConfirm={handleConfirmCarousel}
       />
+
+      {confirmDialog}
     </div>
   );
 }

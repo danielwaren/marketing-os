@@ -12,6 +12,10 @@ import {
 } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
+  Alert,
+  AlertDescription,
+} from "@/components/ui/alert";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -35,6 +39,7 @@ interface InstagramPostPreviewProps {
   onClose(): void;
   instagramConnected?: boolean;
   publishing?: "feed" | "stories" | null;
+  error?: string | null;
   onPublish?(mediaType: "feed" | "stories"): void;
   onSchedule?(scheduledAt: string): void;
 }
@@ -46,6 +51,7 @@ export function InstagramPostPreview({
   onClose,
   instagramConnected = false,
   publishing = null,
+  error = null,
   onPublish,
   onSchedule,
 }: InstagramPostPreviewProps) {
@@ -218,6 +224,14 @@ export function InstagramPostPreview({
                   />
                 )}
               </div>
+
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>
+                    {error}
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
           )}
         </div>
