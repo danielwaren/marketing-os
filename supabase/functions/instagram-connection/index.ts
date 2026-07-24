@@ -274,6 +274,12 @@ interface ShortLivedTokenResponse {
 interface LongLivedTokenResponse {
   access_token?: string;
   expires_in?: number;
+  error?: {
+    message?: string;
+    error_type?: string;
+    code?: number;
+  };
+  error_message?: string;
 }
 
 interface ProfileResponse {
@@ -334,8 +340,13 @@ async function exchangeForLongLivedToken(
     await response.json() as LongLivedTokenResponse;
 
   if (!response.ok || !data.access_token) {
+    const detail =
+      data.error?.message || data.error_message;
+
     throw new Error(
-      "No fue posible generar el token de larga duración."
+      detail
+        ? `No fue posible generar el token de larga duración: ${detail}`
+        : "No fue posible generar el token de larga duración."
     );
   }
 
