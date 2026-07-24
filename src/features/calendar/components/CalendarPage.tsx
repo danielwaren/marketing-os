@@ -2,6 +2,11 @@ import { useState } from "react";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
+import {
+  Alert,
+  AlertDescription,
+} from "@/components/ui/alert";
+import { EmptyState } from "@/components/common/EmptyState";
 
 import { useCalendar } from "../hooks/useCalendar";
 
@@ -36,6 +41,9 @@ export default function CalendarPage() {
   const [rescheduling, setRescheduling] =
     useState(false);
 
+  const [rescheduleError, setRescheduleError] =
+    useState<string | null>(null);
+
   if (loading) {
     return <p>Cargando...</p>;
   }
@@ -67,13 +75,23 @@ export default function CalendarPage() {
     if (currentKey === dateKey) return;
 
     setRescheduling(true);
+    setRescheduleError(null);
 
-    await reschedule(post, targetDate);
+    const { error } = await reschedule(post, targetDate);
+
+    if (error) {
+      setRescheduleError(
+        `No fue posible reprogramar "${post.title}". Intenta de nuevo.`
+      );
+    }
 
     setRescheduling(false);
   }
 
   const isWeek = view === "week";
+  const hasAnyPosts = weeks.some((week) =>
+    week.some((day) => day.posts.length > 0)
+  );
 
   return (
     <div className="space-y-8">
@@ -154,6 +172,21 @@ export default function CalendarPage() {
           </span>
         )}
       </div>
+
+      {rescheduleError && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            {rescheduleError}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!hasAnyPosts && (
+        <EmptyState
+          title="No hay publicaciones en este rango"
+          description="Programa una publicación desde Publicaciones y aparecerá aquí."
+        />
+      )}
 
       <div className="overflow-hidden rounded-xl border">
         <div className="grid grid-cols-7 border-b bg-muted/30">

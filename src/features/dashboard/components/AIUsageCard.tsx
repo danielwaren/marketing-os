@@ -14,7 +14,7 @@ function formatNumber(value: number) {
 export function AIUsageCard({ workspaceId }: Props) {
   const { summary, loading } = useAIUsage(workspaceId);
 
-  if (loading) {
+  if (loading || !summary || summary.generations === 0) {
     return null;
   }
 
@@ -41,34 +41,26 @@ export function AIUsageCard({ workspaceId }: Props) {
           Consumo de IA (Claude) — {monthLabel}
         </h2>
 
-        {!summary || summary.generations === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">
-            Aún no se ha generado texto con IA este mes.
-          </p>
-        ) : (
-          <>
-            <p className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
-              {formatNumber(totalTokens)}{" "}
-              <span className="text-sm font-normal text-muted-foreground">
-                tokens
-              </span>
-            </p>
+        <p className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
+          {formatNumber(totalTokens)}{" "}
+          <span className="text-sm font-normal text-muted-foreground">
+            tokens
+          </span>
+        </p>
 
-            <p className="mt-2 text-sm text-muted-foreground">
-              {formatNumber(summary.inputTokens)} de
-              entrada · {formatNumber(summary.outputTokens)}{" "}
-              de salida
-            </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {formatNumber(summary.inputTokens)} de
+          entrada · {formatNumber(summary.outputTokens)}{" "}
+          de salida
+        </p>
 
-            <p className="mt-1 text-xs text-muted-foreground">
-              {summary.generations}{" "}
-              {summary.generations === 1
-                ? "generación"
-                : "generaciones"}{" "}
-              este mes
-            </p>
-          </>
-        )}
+        <p className="mt-1 text-xs text-muted-foreground">
+          {summary.generations}{" "}
+          {summary.generations === 1
+            ? "generación"
+            : "generaciones"}{" "}
+          este mes
+        </p>
 
         <p className="mt-3 text-xs text-muted-foreground/80">
           Solo cuenta las respuestas generadas por Claude

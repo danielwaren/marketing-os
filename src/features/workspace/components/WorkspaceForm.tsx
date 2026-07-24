@@ -1,9 +1,14 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import {
+  Alert,
+  AlertDescription,
+} from "@/components/ui/alert";
 
 import {
   workspaceSchema,
@@ -13,6 +18,9 @@ import {
 import { createWorkspace } from "../services/workspace.service";
 
 export function WorkspaceForm() {
+  const [formError, setFormError] =
+    useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -30,13 +38,15 @@ export function WorkspaceForm() {
   });
 
   async function onSubmit(data: WorkspaceSchema) {
+    setFormError(null);
+
     const { error } = await createWorkspace({
       ...data,
       instagram_username: data.instagram_username ?? "",
     });
 
     if (error) {
-      alert(error.message);
+      setFormError(error.message);
       return;
     }
 
@@ -48,6 +58,13 @@ export function WorkspaceForm() {
       onSubmit={handleSubmit(onSubmit)}
       className="space-y-5"
     >
+      {formError && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            {formError}
+          </AlertDescription>
+        </Alert>
+      )}
       <div>
         <label
           htmlFor="workspace-name"

@@ -241,7 +241,7 @@ export function useCalendar() {
       0
     );
 
-    await update(post.id, {
+    return await update(post.id, {
       status: "scheduled",
       scheduled_at: next.toISOString(),
     });

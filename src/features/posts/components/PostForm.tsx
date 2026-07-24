@@ -77,6 +77,7 @@ export function PostForm({
     setValue,
     watch,
     formState: {
+      errors,
       isSubmitting,
     },
   } = useForm<PostSchema>({
@@ -261,13 +262,26 @@ export function PostForm({
         >
           {mode === "edit" ? (
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground">
+              <label
+                htmlFor="post-title"
+                className="mb-1.5 block text-sm font-medium text-foreground"
+              >
                 Título
               </label>
 
               <Input
+                id="post-title"
+                aria-invalid={
+                  Boolean(errors.title) || undefined
+                }
                 {...register("title")}
               />
+
+              {errors.title && (
+                <p className="mt-1.5 text-sm text-destructive">
+                  {errors.title.message}
+                </p>
+              )}
             </div>
           ) : (
             <input
@@ -392,15 +406,30 @@ export function PostForm({
           )}
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
+            <label
+              htmlFor="post-content"
+              className="mb-1.5 block text-sm font-medium text-foreground"
+            >
               Publicación
             </label>
 
             {(mode === "edit" || hasGeneratedContent) ? (
-              <Textarea
-                {...register("content")}
-                rows={12}
-              />
+              <>
+                <Textarea
+                  id="post-content"
+                  aria-invalid={
+                    Boolean(errors.content) || undefined
+                  }
+                  {...register("content")}
+                  rows={12}
+                />
+
+                {errors.content && (
+                  <p className="mt-1.5 text-sm text-destructive">
+                    {errors.content.message}
+                  </p>
+                )}
+              </>
             ) : (
               <div className="rounded-xl border border-dashed border-border bg-muted/30 p-6 text-center">
                 <Sparkles

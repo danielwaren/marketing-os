@@ -4,6 +4,11 @@ import type { Media } from "../types/media";
 import { getSignedUrl } from "../services/media.service";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Alert,
+  AlertDescription,
+} from "@/components/ui/alert";
+import { useConfirm } from "@/hooks/useConfirm";
 
 interface Props {
   media: Media;
@@ -14,6 +19,9 @@ export function MediaCard({ media, onDelete }: Props) {
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] =
+    useState<string | null>(null);
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   useEffect(() => {
     async function loadSignedUrl() {
@@ -30,19 +38,23 @@ export function MediaCard({ media, onDelete }: Props) {
   }, [media.file_path]);
 
   async function handleDelete() {
-    const confirmed = window.confirm(
-      `¿Eliminar "${media.file_name}"? Esta acción no se puede deshacer.`
-    );
+    const confirmed = await confirm({
+      title: "Eliminar archivo",
+      description: `¿Eliminar "${media.file_name}"? Esta acción no se puede deshacer.`,
+      confirmLabel: "Eliminar",
+      variant: "destructive",
+    });
 
     if (!confirmed) return;
 
     setDeleting(true);
+    setDeleteError(null);
 
     const { error } = await onDelete(media);
 
     if (error) {
       setDeleting(false);
-      alert(
+      setDeleteError(
         "No fue posible eliminar el archivo. Intenta de nuevo."
       );
     }
@@ -113,7 +125,17 @@ export function MediaCard({ media, onDelete }: Props) {
         >
           {deleting ? "Eliminando..." : "Eliminar"}
         </button>
+
+        {deleteError && (
+          <Alert variant="destructive">
+            <AlertDescription>
+              {deleteError}
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
+
+      {confirmDialog}
     </Card>
   );
 }

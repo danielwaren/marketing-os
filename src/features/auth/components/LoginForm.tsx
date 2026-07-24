@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -5,10 +6,29 @@ import { loginSchema, type LoginSchema } from "../schemas/login.schema";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Alert,
+  AlertDescription,
+} from "@/components/ui/alert";
 
 import { signIn } from "../services/auth.service";
 
+function translateLoginError(message: string) {
+  if (/invalid login credentials/i.test(message)) {
+    return "Correo o contraseña incorrectos. Intenta de nuevo.";
+  }
+
+  if (/email not confirmed/i.test(message)) {
+    return "Tu correo aún no está confirmado. Revisa tu bandeja de entrada.";
+  }
+
+  return "No fue posible iniciar sesión. Intenta de nuevo en unos minutos.";
+}
+
 export function LoginForm() {
+  const [loginError, setLoginError] =
+    useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -18,10 +38,12 @@ export function LoginForm() {
   });
 
   async function onSubmit(data: LoginSchema) {
+    setLoginError(null);
+
     const { error } = await signIn(data.email, data.password);
 
     if (error) {
-      alert(error.message);
+      setLoginError(translateLoginError(error.message));
       return;
     }
 
@@ -33,6 +55,13 @@ export function LoginForm() {
       onSubmit={handleSubmit(onSubmit)}
       className="space-y-5"
     >
+      {loginError && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            {loginError}
+          </AlertDescription>
+        </Alert>
+      )}
       <div>
         <label
           htmlFor="login-email"
@@ -86,6 +115,11 @@ export function LoginForm() {
       >
         {isSubmitting ? "Ingresando..." : "Ingresar"}
       </Button>
+
+      <p className="text-center text-sm text-muted-foreground">
+        ¿No puedes entrar? Contacta a quien te dio acceso
+        a esta cuenta.
+      </p>
     </form>
   );
 }

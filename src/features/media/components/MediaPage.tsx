@@ -1,5 +1,11 @@
+import { useState } from "react";
+
 import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
+import {
+  Alert,
+  AlertDescription,
+} from "@/components/ui/alert";
 
 import { MediaGrid } from "./MediaGrid";
 
@@ -8,12 +14,16 @@ import { MediaUploader } from "./MediaUploader";
 
 export default function MediaPage() {
   const { media, loading, upload, remove } = useMedia();
+  const [uploadError, setUploadError] =
+    useState<string | null>(null);
 
   async function handleUpload(file: File) {
+    setUploadError(null);
+
     const result = await upload(file);
 
     if (result?.error) {
-      alert(result.error.message);
+      setUploadError(result.error.message);
     }
   }
 
@@ -36,6 +46,14 @@ export default function MediaPage() {
           )
         }
       />
+
+      {uploadError && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            {uploadError}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {media.length === 0 ? (
         <EmptyState

@@ -2,6 +2,10 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/common/PageHeader";
+import {
+  Alert,
+  AlertDescription,
+} from "@/components/ui/alert";
 
 import type { Media } from "@/features/media/types/media";
 import type { DailyMenuSchema } from "../schemas/daily-menu.schema";
@@ -26,8 +30,14 @@ export default function DailyMenuPage() {
   const [editing, setEditing] = useState(false);
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
+  const [formError, setFormError] =
+    useState<string | null>(null);
+  const [successMessage, setSuccessMessage] =
+    useState<string | null>(null);
 
   async function handleCreate(data: DailyMenuSchema) {
+    setFormError(null);
+
     const { error } = await create({
       ...data,
       price: DEFAULT_DAILY_MENU_PRICE,
@@ -35,7 +45,7 @@ export default function DailyMenuPage() {
     });
 
     if (error) {
-      alert(error.message);
+      setFormError(error.message);
       return;
     }
 
@@ -48,6 +58,8 @@ export default function DailyMenuPage() {
       return;
     }
 
+    setFormError(null);
+
     const { error } = await update({
       starter: data.starter,
       main_course: data.main_course,
@@ -57,13 +69,13 @@ export default function DailyMenuPage() {
     });
 
     if (error) {
-      alert(error.message);
+      setFormError(error.message);
       return;
     }
 
     setEditing(false);
     setSelectedMedia(null);
-    alert("Menú actualizado correctamente");
+    setSuccessMessage("Menú actualizado correctamente.");
   }
 
   function handleSelectPhoto(media: Media) {
@@ -102,6 +114,22 @@ export default function DailyMenuPage() {
               : "Crea el menú que se utilizará hoy."
           }
         />
+
+        {formError && (
+          <Alert variant="destructive">
+            <AlertDescription>
+              {formError}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {successMessage && !editing && (
+          <Alert variant="success">
+            <AlertDescription>
+              {successMessage}
+            </AlertDescription>
+          </Alert>
+        )}
 
         {!menu ? (
           <DailyMenuForm
@@ -177,7 +205,10 @@ export default function DailyMenuPage() {
 
             <Button
               type="button"
-              onClick={() => setEditing(true)}
+              onClick={() => {
+                setSuccessMessage(null);
+                setEditing(true);
+              }}
             >
               Editar menú
             </Button>
