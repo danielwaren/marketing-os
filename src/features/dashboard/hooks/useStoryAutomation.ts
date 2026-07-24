@@ -58,6 +58,7 @@ export function useStoryAutomation({
         title: `Historia IA - ${media.file_name}`,
         content,
         platform: "instagram",
+        format: "story",
       }
     );
 

@@ -634,7 +634,10 @@ export default function PostsPage() {
         !editingPost &&
         filteredPosts.length > 0 && (
           <div className="grid gap-6 xl:grid-cols-2">
-            {filteredPosts.map((post) => (
+            {filteredPosts.map((post) => {
+              const postPhoto = post.menu?.media ?? post.media;
+
+              return (
               <Card
                 key={post.id}
                 className="gap-0 py-0 transition-shadow hover:shadow-md"
@@ -667,9 +670,9 @@ export default function PostsPage() {
                     {post.content}
                   </p>
 
-                  {post.menu?.media && (
+                  {postPhoto && (
                     <MenuPhoto
-                      filePath={post.menu.media.file_path}
+                      filePath={postPhoto.file_path}
                     />
                   )}
                 </CardContent>
@@ -695,7 +698,7 @@ export default function PostsPage() {
                       </span>
 
                       {instagramConnected &&
-                      post.menu?.media ? (
+                      postPhoto ? (
                         <span className="text-xs text-muted-foreground">
                           Se publicará automáticamente en Instagram a esa hora.
                         </span>
@@ -791,7 +794,7 @@ export default function PostsPage() {
                   <div className="flex flex-wrap gap-2">
                     {instagramConnected &&
                       post.platform === "instagram" &&
-                      post.menu?.media &&
+                      postPhoto &&
                       post.status !== "published" && (
                         <Button
                           disabled={
@@ -813,7 +816,7 @@ export default function PostsPage() {
 
                     {instagramConnected &&
                       post.platform === "instagram" &&
-                      post.menu?.media && (
+                      postPhoto && (
                         <Button
                           variant="outline"
                           disabled={
@@ -935,7 +938,8 @@ export default function PostsPage() {
                   )}
                 </CardFooter>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
 

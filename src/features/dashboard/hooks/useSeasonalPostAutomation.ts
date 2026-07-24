@@ -89,6 +89,7 @@ export function useSeasonalPostAutomation({
         title,
         content: text,
         platform: "instagram",
+        format: "post",
       }
     );
 

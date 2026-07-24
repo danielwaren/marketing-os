@@ -250,6 +250,7 @@ export function SuggestionCard({
                   <StoryDesignPicker
                     photoUrl={signedUrl}
                     data={{
+                      kind: "menu",
                       starter: menu.starter,
                       main_course: menu.main_course,
                       dessert: menu.dessert,

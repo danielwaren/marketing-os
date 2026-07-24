@@ -12,6 +12,8 @@ export type Platform =
   | "facebook"
   | "whatsapp";
 
+export type PostFormat = "post" | "story";
+
 export interface PostMenu {
   media: DailyMenuMedia | null;
 }
@@ -40,6 +42,8 @@ export interface Post {
 
   platform: Platform;
 
+  format: PostFormat | null;
+
   status: PostStatus;
 
   scheduled_at: string | null;
@@ -61,6 +65,8 @@ export interface CreatePostDto {
   content: string;
 
   platform: Platform;
+
+  format?: PostFormat | null;
 }
 
 export interface UpdatePostDto

@@ -59,6 +59,7 @@ export function InstagramPostPreview({
     return null;
   }
 
+  const isStory = post.format === "story";
   const hasPhoto = Boolean(
     post.menu?.media || post.media
   );
@@ -82,92 +83,147 @@ export function InstagramPostPreview({
       <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader className="border-b">
           <SheetTitle>
-            Vista previa de Instagram
+            {isStory
+              ? "Vista previa de la historia"
+              : "Vista previa de Instagram"}
           </SheetTitle>
 
           <SheetDescription>
-            Así se verá aproximadamente la publicación.
+            Así se verá aproximadamente{" "}
+            {isStory ? "la historia" : "la publicación"}
+            .
           </SheetDescription>
         </SheetHeader>
 
         <div className="p-4">
-          <Card className="mx-auto max-w-md gap-0 overflow-hidden bg-white py-0 text-neutral-950 ring-black/10">
-            <CardHeader className="flex flex-row items-center gap-3 py-3">
-              <Avatar>
-                <AvatarFallback className="bg-linear-to-br from-fuchsia-500 to-orange-400 font-semibold text-white">
-                  {workspaceName.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+          {isStory ? (
+            <div className="relative mx-auto aspect-[9/16] max-w-[280px] overflow-hidden rounded-2xl bg-black text-white ring-1 ring-black/10">
+              <div className="absolute inset-x-2 top-2 z-10 h-0.5 overflow-hidden rounded-full bg-white/30">
+                <div className="h-full w-2/3 rounded-full bg-white" />
+              </div>
 
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">
+              <div className="absolute inset-x-2 top-5 z-10 flex items-center gap-2">
+                <Avatar className="size-7 ring-2 ring-white">
+                  <AvatarFallback className="bg-linear-to-br from-fuchsia-500 to-orange-400 text-[10px] font-semibold text-white">
+                    {workspaceName.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+
+                <span className="truncate text-xs font-semibold drop-shadow">
                   {username}
-                </p>
-
-                <p className="truncate text-xs text-neutral-500">
-                  {workspaceName}
-                </p>
+                </span>
               </div>
 
-              <MoreHorizontal
-                className="size-5"
-                aria-hidden="true"
-              />
-            </CardHeader>
+              {hasPhoto ? (
+                <div className="h-full [&_img]:mt-0 [&_img]:aspect-[9/16] [&_img]:h-full [&_img]:rounded-none">
+                  <MenuPhoto
+                    filePath={
+                      (post.menu?.media ?? post.media)!
+                        .file_path
+                    }
+                  />
+                </div>
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-white/70">
+                  Sin fotografía asociada
+                </div>
+              )}
 
-            {post.menu?.media || post.media ? (
-              <div className="[&_img]:mt-0 [&_img]:aspect-square [&_img]:h-auto [&_img]:rounded-none">
-                <MenuPhoto
-                  filePath={
-                    (post.menu?.media ?? post.media)!
-                      .file_path
-                  }
-                />
-              </div>
-            ) : (
-              <div className="flex aspect-square items-center justify-center bg-neutral-100 text-sm text-neutral-500">
-                Sin fotografía asociada
-              </div>
-            )}
+              <div className="absolute inset-x-3 bottom-3 z-10 flex items-center gap-2">
+                <div className="flex-1 truncate rounded-full border border-white/40 px-3 py-1.5 text-xs text-white/70">
+                  Enviar mensaje
+                </div>
 
-            <CardContent className="space-y-3 py-3">
-              <div className="flex items-center gap-4">
                 <Heart
-                  className="size-6"
-                  aria-hidden="true"
-                />
-
-                <MessageCircle
-                  className="size-6"
+                  className="size-5 shrink-0"
                   aria-hidden="true"
                 />
 
                 <Send
-                  className="size-6"
-                  aria-hidden="true"
-                />
-
-                <Bookmark
-                  className="ml-auto size-6"
+                  className="size-5 shrink-0"
                   aria-hidden="true"
                 />
               </div>
+            </div>
+          ) : (
+            <Card className="mx-auto max-w-md gap-0 overflow-hidden bg-white py-0 text-neutral-950 ring-black/10">
+              <CardHeader className="flex flex-row items-center gap-3 py-3">
+                <Avatar>
+                  <AvatarFallback className="bg-linear-to-br from-fuchsia-500 to-orange-400 font-semibold text-white">
+                    {workspaceName.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
 
-              <p className="whitespace-pre-line text-sm leading-5">
-                <span className="mr-1 font-semibold">
-                  {username}
-                </span>
-                {post.content}
-              </p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">
+                    {username}
+                  </p>
 
-              <p className="text-xs uppercase text-neutral-500">
-                {new Intl.DateTimeFormat("es-CL", {
-                  day: "numeric",
-                  month: "long",
-                }).format(new Date(post.created_at))}
-              </p>
-            </CardContent>
-          </Card>
+                  <p className="truncate text-xs text-neutral-500">
+                    {workspaceName}
+                  </p>
+                </div>
+
+                <MoreHorizontal
+                  className="size-5"
+                  aria-hidden="true"
+                />
+              </CardHeader>
+
+              {post.menu?.media || post.media ? (
+                <div className="[&_img]:mt-0 [&_img]:aspect-square [&_img]:h-auto [&_img]:rounded-none">
+                  <MenuPhoto
+                    filePath={
+                      (post.menu?.media ?? post.media)!
+                        .file_path
+                    }
+                  />
+                </div>
+              ) : (
+                <div className="flex aspect-square items-center justify-center bg-neutral-100 text-sm text-neutral-500">
+                  Sin fotografía asociada
+                </div>
+              )}
+
+              <CardContent className="space-y-3 py-3">
+                <div className="flex items-center gap-4">
+                  <Heart
+                    className="size-6"
+                    aria-hidden="true"
+                  />
+
+                  <MessageCircle
+                    className="size-6"
+                    aria-hidden="true"
+                  />
+
+                  <Send
+                    className="size-6"
+                    aria-hidden="true"
+                  />
+
+                  <Bookmark
+                    className="ml-auto size-6"
+                    aria-hidden="true"
+                  />
+                </div>
+
+                <p className="whitespace-pre-line text-sm leading-5">
+                  <span className="mr-1 font-semibold">
+                    {username}
+                  </span>
+                  {post.content}
+                </p>
+
+                <p className="text-xs uppercase text-neutral-500">
+                  {new Intl.DateTimeFormat("es-CL", {
+                    day: "numeric",
+                    month: "long",
+                  }).format(new Date(post.created_at))}
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {canAct && (onPublish || onSchedule) && (
             <div className="mx-auto mt-5 max-w-md space-y-3">
@@ -186,7 +242,7 @@ export function InstagramPostPreview({
               )}
 
               <div className="flex flex-wrap gap-2">
-                {onPublish && (
+                {onPublish && post.format !== "story" && (
                   <Button
                     disabled={
                       !instagramConnected ||
@@ -201,7 +257,7 @@ export function InstagramPostPreview({
                   </Button>
                 )}
 
-                {onPublish && (
+                {onPublish && post.format !== "post" && (
                   <Button
                     variant="outline"
                     disabled={

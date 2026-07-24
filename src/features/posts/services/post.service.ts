@@ -44,6 +44,7 @@ export async function createPost(
       title: post.title,
       content: post.content,
       platform: post.platform,
+      format: post.format ?? null,
     })
     .select(postSelect)
     .single();

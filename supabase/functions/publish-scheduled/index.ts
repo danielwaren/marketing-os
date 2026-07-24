@@ -52,9 +52,11 @@ interface DuePostRow {
   id: string;
   workspace_id: string;
   content: string;
+  format: "post" | "story" | null;
   menu: {
     media: { file_path: string } | null;
   } | null;
+  media: { file_path: string } | null;
 }
 
 async function getDuePosts() {
@@ -70,7 +72,7 @@ async function getDuePosts() {
   );
   url.searchParams.set(
     "select",
-    "id,workspace_id,content,menu:menu_id(media:media_id(file_path))"
+    "id,workspace_id,content,format,menu:menu_id(media:media_id(file_path)),media:media_id(file_path)"
   );
   url.searchParams.set("order", "scheduled_at.asc");
   url.searchParams.set("limit", "20");
@@ -109,7 +111,9 @@ Deno.serve(async (request) => {
   }> = [];
 
   for (const post of duePosts) {
-    const filePath = post.menu?.media?.file_path;
+    const filePath =
+      post.menu?.media?.file_path ??
+      post.media?.file_path;
 
     if (!filePath) {
       results.push({
@@ -143,6 +147,10 @@ Deno.serve(async (request) => {
         accessToken: connection.access_token,
         imageUrl,
         caption: post.content,
+        mediaType:
+          post.format === "story"
+            ? "stories"
+            : undefined,
       });
 
       await markPostPublished(post.id);

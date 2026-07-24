@@ -6,6 +6,13 @@ import {
   Alert,
   AlertDescription,
 } from "@/components/ui/alert";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import type { Media } from "@/features/media/types/media";
 import type { DailyMenu } from "@/features/menu/types/daily-menu";
 import type { Post } from "@/features/posts/types/post";
@@ -14,6 +21,9 @@ import {
   publishInstagramPost,
 } from "@/features/instagram/services/instagram.service";
 import { updatePost } from "@/features/posts/services/post.service";
+import { uploadComposedImage } from "@/features/media/services/media.service";
+import { StoryDesignPicker } from "@/features/story-design/StoryDesignPicker";
+import type { StoryTemplateId } from "@/features/story-design/templates";
 import type { Workspace } from "@/features/workspace/types/workspace";
 
 import {
@@ -24,7 +34,11 @@ import {
   getDaysSincePublish,
   getNudgeSeverity,
 } from "../services/publish-nudge.service";
-import { useNudgePreview } from "../hooks/useNudgePreview";
+import {
+  isStoryDraft,
+  useNudgePreview,
+  type StoryDraft,
+} from "../hooks/useNudgePreview";
 import { NudgeSuggestionCard } from "./NudgeSuggestionCard";
 
 interface Props {
@@ -82,14 +96,21 @@ export function PublishNudgeBanner({
   const [dismissed, setDismissed] = useState(false);
   const [previewPost, setPreviewPost] =
     useState<Post | null>(null);
+  const [storyDraft, setStoryDraft] =
+    useState<StoryDraft | null>(null);
+  const [composing, setComposing] = useState(false);
   const [publishing, setPublishing] = useState<
     "feed" | "stories" | null
   >(null);
   const [publishError, setPublishError] =
     useState<string | null>(null);
 
-  const { generatingId, error, generatePreview } =
-    useNudgePreview({ workspace, menu });
+  const {
+    generatingId,
+    error,
+    generatePreview,
+    createStoryPost,
+  } = useNudgePreview({ workspace, menu });
 
   const daysSincePublish = getDaysSincePublish(posts);
   const severity = getNudgeSeverity(daysSincePublish);
@@ -106,9 +127,69 @@ export function PublishNudgeBanner({
   ) {
     setPublishError(null);
 
-    const post = await generatePreview(suggestion);
+    const result = await generatePreview(suggestion);
+
+    if (!result) return;
+
+    if (isStoryDraft(result)) {
+      setStoryDraft(result);
+    } else {
+      setPreviewPost(result);
+    }
+  }
+
+  // El usuario eligió una plantilla del minicanva: compone el texto de
+  // la IA sobre la foto, sube la imagen resultante y crea el borrador
+  // con esa imagen compuesta.
+  async function handleConfirmDesign(blob: Blob) {
+    if (!storyDraft) return;
+
+    setComposing(true);
+    setPublishError(null);
+
+    const uploaded = await uploadComposedImage(
+      workspace.id,
+      blob,
+      `historia-${Date.now()}.png`
+    );
+
+    if (uploaded.error || !uploaded.data) {
+      setPublishError(
+        "No fue posible preparar el diseño. Intenta de nuevo."
+      );
+      setComposing(false);
+      return;
+    }
+
+    const post = await createStoryPost(
+      storyDraft,
+      (uploaded.data as Media).id
+    );
+
+    setComposing(false);
 
     if (post) {
+      setStoryDraft(null);
+      setPreviewPost(post);
+    }
+  }
+
+  // Usa la foto original sin componer texto (comportamiento anterior).
+  async function handleSkipDesign() {
+    if (!storyDraft) return;
+
+    setComposing(true);
+    setPublishError(null);
+
+    const post = await createStoryPost(
+      storyDraft,
+      storyDraft.suggestion.media.id
+    );
+
+    setComposing(false);
+
+    if (post) {
+      setStoryDraft(null);
       setPreviewPost(post);
     }
   }
@@ -249,6 +330,56 @@ export function PublishNudgeBanner({
         onPublish={handlePublish}
         onSchedule={handleSchedule}
       />
+
+      <Sheet
+        open={Boolean(storyDraft)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setStoryDraft(null);
+          }
+        }}
+      >
+        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+          <SheetHeader className="border-b">
+            <SheetTitle>Diseña la historia</SheetTitle>
+
+            <SheetDescription>
+              Elige cómo mostrar el texto que generó la IA
+              sobre la foto.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="p-4">
+            {publishError && (
+              <Alert
+                variant="destructive"
+                className="mb-3"
+              >
+                <AlertDescription>
+                  {publishError}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {storyDraft && (
+              <StoryDesignPicker
+                photoUrl={storyDraft.photoUrl}
+                data={{
+                  kind: "text",
+                  eyebrow: "NOVEDAD",
+                  message: storyDraft.message,
+                }}
+                confirming={composing}
+                onConfirm={(
+                  blob: Blob,
+                  _templateId: StoryTemplateId
+                ) => handleConfirmDesign(blob)}
+                onSkip={handleSkipDesign}
+              />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

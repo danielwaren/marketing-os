@@ -85,13 +85,7 @@ export function StoryDesignPicker({
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    photoUrl,
-    data.starter,
-    data.main_course,
-    data.dessert,
-    data.price,
-  ]);
+  }, [photoUrl, JSON.stringify(data)]);
 
   async function handleConfirm() {
     if (!selected) return;

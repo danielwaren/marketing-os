@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useGeneratePostText } from "@/features/ai/hooks/useGeneratePostText";
 import { useGenerateStory } from "@/features/ai/hooks/useGenerateStory";
 import { getPhotoContext } from "@/features/ai/services/photo-context.service";
+import { getSignedUrl } from "@/features/media/services/media.service";
 import type { DailyMenu } from "@/features/menu/types/daily-menu";
 import { createPost } from "@/features/posts/services/post.service";
 import type { Post } from "@/features/posts/types/post";
@@ -14,6 +15,21 @@ import { planStoryType } from "../services/story-planner.service";
 interface Options {
   workspace: Workspace;
   menu: DailyMenu | null;
+}
+
+// Borrador de historia pendiente de diseño: ya tiene el texto generado
+// por IA, pero falta que el usuario elija cómo componerlo sobre la foto
+// (o decida usar la foto tal cual) antes de crear el post.
+export interface StoryDraft {
+  suggestion: ContentSuggestion;
+  photoUrl: string;
+  message: string;
+}
+
+export function isStoryDraft(
+  value: Post | StoryDraft
+): value is StoryDraft {
+  return "message" in value;
 }
 
 function toWorkspaceInput(workspace: Workspace) {
@@ -42,7 +58,7 @@ export function useNudgePreview({ workspace, menu }: Options) {
 
   async function generatePreview(
     suggestion: ContentSuggestion
-  ): Promise<Post | null> {
+  ): Promise<Post | StoryDraft | null> {
     setGeneratingId(suggestion.id);
     setError(null);
 
@@ -71,25 +87,22 @@ export function useNudgePreview({ workspace, menu }: Options) {
           return null;
         }
 
-        const created = await createPost(
-          workspace.id,
-          {
-            menu_id: null,
-            media_id: suggestion.media.id,
-            title: `Historia IA - ${suggestion.media.file_name}`,
-            content: result.data.text,
-            platform: "instagram",
-          }
+        const { data: signed } = await getSignedUrl(
+          suggestion.media.file_path
         );
 
-        if (created.error || !created.data) {
+        if (!signed?.signedUrl) {
           setError(
-            "No fue posible guardar la historia como borrador."
+            "No fue posible cargar la fotografía para el diseño."
           );
           return null;
         }
 
-        return created.data;
+        return {
+          suggestion,
+          photoUrl: signed.signedUrl,
+          message: result.data.text,
+        };
       }
 
       if (!menu) {
@@ -123,6 +136,7 @@ export function useNudgePreview({ workspace, menu }: Options) {
         title: `${suggestion.title} - ${new Intl.DateTimeFormat("es-CL").format(new Date())}`,
         content: result.data.text,
         platform: "instagram",
+        format: "post",
       });
 
       if (created.error || !created.data) {
@@ -138,9 +152,37 @@ export function useNudgePreview({ workspace, menu }: Options) {
     }
   }
 
+  // Crea el post de la historia una vez que el usuario ya eligió la
+  // imagen final (compuesta con el minicanva, o la foto original).
+  async function createStoryPost(
+    draft: StoryDraft,
+    mediaId: string
+  ): Promise<Post | null> {
+    setError(null);
+
+    const created = await createPost(workspace.id, {
+      menu_id: null,
+      media_id: mediaId,
+      title: `Historia IA - ${draft.suggestion.media.file_name}`,
+      content: draft.message,
+      platform: "instagram",
+      format: "story",
+    });
+
+    if (created.error || !created.data) {
+      setError(
+        "No fue posible guardar la historia como borrador."
+      );
+      return null;
+    }
+
+    return created.data;
+  }
+
   return {
     generatingId,
     error,
     generatePreview,
+    createStoryPost,
   };
 }
